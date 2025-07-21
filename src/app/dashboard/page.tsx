@@ -15,8 +15,8 @@ export default function DashboardPage() {
     router.push('/login');
   };
 
-  // Show loading if auth is still loading or teacher data is not available
-  if (isLoading || !teacher) {
+  // Show loading if auth is still loading or no user data is available
+  if (isLoading || (!teacher && !admin)) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
@@ -38,22 +38,22 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Dashboard Wali Kelas
+                {admin ? 'Dashboard Admin' : 'Dashboard Wali Kelas'}
               </h1>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Selamat datang, {teacher?.name || 'Loading...'}
+                Selamat datang, {admin?.name || teacher?.name || 'Loading...'}
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {teacher?.name || 'Loading...'}
+                  {admin?.name || teacher?.name || 'Loading...'}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-300">
                   {admin ? `Admin - ${admin.position}` : `Guru Kelas ${teacher?.className || '...'}`}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  NIP: {teacher?.nip || '...'}
+                  NIP: {admin?.nip || teacher?.nip || '...'}
                 </p>
               </div>
               <button
@@ -96,8 +96,8 @@ export default function DashboardPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     <div>
-                      <p className="text-sm text-green-600 dark:text-green-400">Wali Kelas</p>
-                      <p className="text-lg font-semibold text-green-800 dark:text-green-200">{teacher?.name || 'Loading...'}</p>
+                      <p className="text-sm text-green-600 dark:text-green-400">{admin ? 'Admin' : 'Wali Kelas'}</p>
+                      <p className="text-lg font-semibold text-green-800 dark:text-green-200">{admin?.name || teacher?.name || 'Loading...'}</p>
                     </div>
                   </div>
                 </div>
@@ -108,7 +108,7 @@ export default function DashboardPage() {
                     </svg>
                     <div>
                       <p className="text-sm text-purple-600 dark:text-purple-400">NIP</p>
-                      <p className="text-lg font-semibold text-purple-800 dark:text-purple-200">{teacher?.nip || 'Loading...'}</p>
+                      <p className="text-lg font-semibold text-purple-800 dark:text-purple-200">{admin?.nip || teacher?.nip || 'Loading...'}</p>
                     </div>
                   </div>
                 </div>
