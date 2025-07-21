@@ -4,42 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-
-// Dummy data untuk wali kelas
-const dummyTeachers = [
-  {
-    id: '1',
-    username: 'walikelas1',
-    password: 'password123',
-    name: 'Ibu Sari Dewi, S.Pd',
-    class: '12 IPA 1',
-    nip: '196801011990032001'
-  },
-  {
-    id: '2',
-    username: 'walikelas2',
-    password: 'password123',
-    name: 'Bapak Ahmad Wijaya, S.Pd',
-    class: '12 IPA 2',
-    nip: '197205151995121002'
-  },
-  {
-    id: '3',
-    username: 'walikelas3',
-    password: 'password123',
-    name: 'Ibu Maya Sari, S.Pd',
-    class: '12 IPS 1',
-    nip: '198003201998032003'
-  },
-  {
-    id: '4',
-    username: 'walikelas4',
-    password: 'password123',
-    name: 'Bapak Dedi Kurniawan, S.Pd',
-    class: '12 IPS 2',
-    nip: '197812101999031004'
-  }
-];
+import { validateTeacherCredentials, getAllTeachers } from '@/data/classesData';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -77,10 +42,8 @@ export default function LoginPage() {
     // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // Check credentials
-    const teacher = dummyTeachers.find(
-      t => t.username === formData.username && t.password === formData.password
-    );
+    // Check credentials using centralized validation
+    const teacher = validateTeacherCredentials(formData.username, formData.password);
 
     if (teacher) {
       // Use AuthContext to login
@@ -203,10 +166,11 @@ export default function LoginPage() {
               Demo Akun Wali Kelas:
             </h3>
             <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-              <p><strong>Username:</strong> walikelas1 | <strong>Password:</strong> password123</p>
-              <p><strong>Username:</strong> walikelas2 | <strong>Password:</strong> password123</p>
-              <p><strong>Username:</strong> walikelas3 | <strong>Password:</strong> password123</p>
-              <p><strong>Username:</strong> walikelas4 | <strong>Password:</strong> password123</p>
+              {getAllTeachers().map((teacher) => (
+                <p key={teacher.id}>
+                  <strong>Username:</strong> {teacher.username} | <strong>Password:</strong> {teacher.password} | <strong>Kelas:</strong> {teacher.className}
+                </p>
+              ))}
             </div>
           </div>
 

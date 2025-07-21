@@ -1,14 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-interface Teacher {
-  id: string;
-  username: string;
-  name: string;
-  class: string;
-  nip: string;
-}
+import { Teacher } from '@/data/classesData';
 
 interface AuthContextType {
   teacher: Teacher | null;

@@ -50,7 +50,7 @@ export default function DashboardPage() {
                   {teacher?.name || 'Loading...'}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-300">
-                  Wali Kelas {teacher?.class || '...'}
+                  Wali Kelas {teacher?.className || '...'}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   NIP: {teacher?.nip || '...'}
@@ -84,7 +84,7 @@ export default function DashboardPage() {
                     </svg>
                     <div>
                       <p className="text-sm text-blue-600 dark:text-blue-400">Kelas</p>
-                      <p className="text-lg font-semibold text-blue-800 dark:text-blue-200">{teacher?.class || 'Loading...'}</p>
+                      <p className="text-lg font-semibold text-blue-800 dark:text-blue-200">{teacher?.className || 'Loading...'}</p>
                     </div>
                   </div>
                 </div>

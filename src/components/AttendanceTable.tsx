@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Student, getStudentsByClass, allStudentsData } from '@/data/studentsData';
+import { getAllClassNames } from '@/data/classesData';
 
 export default function AttendanceTable() {
   const { teacher } = useAuth();
@@ -19,9 +20,9 @@ export default function AttendanceTable() {
 
   // Load students based on authentication state
   useEffect(() => {
-    if (teacher?.class) {
+    if (teacher?.className) {
       // Teacher logged in: show only their class students
-      const classStudents = getStudentsByClass(teacher.class);
+      const classStudents = getStudentsByClass(teacher.className);
       setStudents(classStudents);
     } else {
       // No teacher logged in: show all students
@@ -233,7 +234,7 @@ export default function AttendanceTable() {
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {teacher
-              ? `Menampilkan ${students.length} siswa kelas ${teacher.class}`
+              ? `Menampilkan ${students.length} siswa kelas ${teacher.className}`
               : `Menampilkan ${filteredStudents.length} dari ${students.length} siswa`
             }
           </p>

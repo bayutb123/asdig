@@ -21,8 +21,8 @@ export default function ManualAttendancePage() {
 
   // Load students for teacher's class only
   useEffect(() => {
-    if (teacher?.class) {
-      const classStudents = getStudentsByClass(teacher.class);
+    if (teacher?.className) {
+      const classStudents = getStudentsByClass(teacher.className);
       setStudents(classStudents);
     }
   }, [teacher]);
