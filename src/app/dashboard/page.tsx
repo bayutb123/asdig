@@ -118,7 +118,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 mb-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <Link
             href="/absen-manual"
             className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-center block"
@@ -129,7 +129,7 @@ export default function DashboardPage() {
             <h3 className="font-semibold text-gray-900 dark:text-white">Absen Manual</h3>
             <p className="text-sm text-gray-600 dark:text-gray-300">Input absensi siswa</p>
           </Link>
-          
+
           <Link
             href="/laporan-absen"
             className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-center block"
@@ -140,7 +140,20 @@ export default function DashboardPage() {
             <h3 className="font-semibold text-gray-900 dark:text-white">Laporan Absensi</h3>
             <p className="text-sm text-gray-600 dark:text-gray-300">Lihat laporan absensi</p>
           </Link>
-          
+
+          {hasTeacherAccess && (
+            <Link
+              href="/cetak-absen"
+              className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-center block"
+            >
+              <svg className="h-8 w-8 text-indigo-600 dark:text-indigo-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              <h3 className="font-semibold text-gray-900 dark:text-white">Cetak Absensi</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Cetak daftar multi-hari</p>
+            </Link>
+          )}
+
           <Link
             href="/kelola-kelas"
             className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-center block"
@@ -153,7 +166,7 @@ export default function DashboardPage() {
               {hasAdminAccess ? 'Tambah & kelola kelas' : 'Lihat informasi kelas'}
             </p>
           </Link>
-          
+
           <button className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-center">
             <svg className="h-8 w-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
