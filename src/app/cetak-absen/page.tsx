@@ -37,9 +37,9 @@ export default function CetakAbsenPage() {
     if (hasTeacherAccess && teacher?.className) {
       const availableDates = getAvailableDates();
       if (availableDates.length > 0) {
-        // Default to last 7 days
+        // Default to last 10 school days (about 2 weeks)
         const endDateDefault = availableDates[availableDates.length - 1];
-        const startDateDefault = availableDates[Math.max(0, availableDates.length - 7)];
+        const startDateDefault = availableDates[Math.max(0, availableDates.length - 10)];
         setStartDate(startDateDefault);
         setEndDate(endDateDefault);
       }
@@ -98,14 +98,19 @@ export default function CetakAbsenPage() {
     const dates: string[] = [];
     const startDate = new Date(start);
     const endDate = new Date(end);
-    
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      // Skip weekends
+
+    // Limit to maximum 1 month (31 days) from start date
+    const maxEndDate = new Date(startDate);
+    maxEndDate.setDate(maxEndDate.getDate() + 31);
+    const actualEndDate = endDate > maxEndDate ? maxEndDate : new Date(end);
+
+    for (let d = new Date(startDate); d <= actualEndDate; d.setDate(d.getDate() + 1)) {
+      // Skip weekends (Saturday = 6, Sunday = 0)
       if (d.getDay() !== 0 && d.getDay() !== 6) {
         dates.push(d.toISOString().split('T')[0]);
       }
     }
-    
+
     return dates;
   };
 
@@ -233,20 +238,20 @@ export default function CetakAbsenPage() {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 15px;
-            font-size: 9px;
+            font-size: ${selectedDates.length > 15 ? '7px' : '9px'};
           }
-          
+
           th, td {
             border: 1px solid #000;
-            padding: 4px 2px;
+            padding: ${selectedDates.length > 15 ? '2px 1px' : '4px 2px'};
             text-align: center;
             vertical-align: middle;
           }
-          
+
           th {
             background-color: #f0f0f0;
             font-weight: bold;
-            font-size: 8px;
+            font-size: ${selectedDates.length > 15 ? '6px' : '8px'};
           }
           
           .student-name {
@@ -255,10 +260,13 @@ export default function CetakAbsenPage() {
             max-width: 120px;
             font-size: 8px;
           }
-          
+
           .nisn {
             font-family: monospace;
-            font-size: 8px;
+            font-size: 7px;
+            width: 60px;
+            max-width: 60px;
+            padding: 2px 1px;
           }
           
           .status-H { background-color: #d4edda; }
@@ -326,14 +334,14 @@ export default function CetakAbsenPage() {
         <table>
           <thead>
             <tr>
-              <th rowspan="2">No</th>
-              <th rowspan="2">NISN</th>
-              <th rowspan="2">Nama Siswa</th>
+              <th rowspan="2" style="width: 30px;">No</th>
+              <th rowspan="2" style="width: 60px;">NISN</th>
+              <th rowspan="2" style="width: 120px;">Nama Siswa</th>
               <th colspan="${selectedDates.length}">Tanggal</th>
-              <th rowspan="2">H</th>
-              <th rowspan="2">T</th>
-              <th rowspan="2">A</th>
-              <th rowspan="2">I</th>
+              <th rowspan="2" style="width: 25px;">H</th>
+              <th rowspan="2" style="width: 25px;">T</th>
+              <th rowspan="2" style="width: 25px;">A</th>
+              <th rowspan="2" style="width: 25px;">I</th>
             </tr>
             <tr>
               ${selectedDates.map(date => `<th>${new Date(date).getDate()}</th>`).join('')}
@@ -497,9 +505,14 @@ export default function CetakAbsenPage() {
             <div className="flex justify-between items-center">
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 {selectedDates.length > 0 && (
-                  <p>
-                    Akan mencetak {selectedDates.length} hari sekolah untuk {attendanceData.length} siswa
-                  </p>
+                  <div>
+                    <p>
+                      Akan mencetak {selectedDates.length} hari sekolah untuk {attendanceData.length} siswa
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                      Maksimal 1 bulan data (weekend tidak ditampilkan)
+                    </p>
+                  </div>
                 )}
               </div>
               
@@ -536,8 +549,8 @@ export default function CetakAbsenPage() {
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-700">
-                      <th className="border border-gray-300 dark:border-gray-600 px-2 py-2 text-left">No</th>
-                      <th className="border border-gray-300 dark:border-gray-600 px-2 py-2 text-left">NISN</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-2 py-2 text-left w-12">No</th>
+                      <th className="border border-gray-300 dark:border-gray-600 px-1 py-2 text-left w-20">NISN</th>
                       <th className="border border-gray-300 dark:border-gray-600 px-2 py-2 text-left">Nama Siswa</th>
                       {selectedDates.slice(0, 10).map(date => (
                         <th key={date} className="border border-gray-300 dark:border-gray-600 px-1 py-2 text-center text-xs">
@@ -554,8 +567,8 @@ export default function CetakAbsenPage() {
                   <tbody>
                     {attendanceData.slice(0, 10).map((student, index) => (
                       <tr key={student.studentId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="border border-gray-300 dark:border-gray-600 px-2 py-2">{index + 1}</td>
-                        <td className="border border-gray-300 dark:border-gray-600 px-2 py-2 font-mono text-xs">{student.nisn}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-2 py-2 text-center">{index + 1}</td>
+                        <td className="border border-gray-300 dark:border-gray-600 px-1 py-2 font-mono text-xs">{student.nisn}</td>
                         <td className="border border-gray-300 dark:border-gray-600 px-2 py-2">{student.studentName}</td>
                         {selectedDates.slice(0, 10).map(date => {
                           const attendance = student.attendanceByDate[date];
@@ -591,7 +604,8 @@ export default function CetakAbsenPage() {
               
               <div className="mt-4 text-xs text-gray-600 dark:text-gray-400">
                 <p>Keterangan: H = Hadir, T = Terlambat, A = Tidak Hadir, I = Izin</p>
-                <p>Preview menampilkan maksimal 10 siswa dan 10 hari pertama. Hasil cetak akan menampilkan semua data.</p>
+                <p>Preview menampilkan maksimal 10 siswa dan {Math.min(selectedDates.length, 10)} hari. Hasil cetak akan menampilkan semua data.</p>
+                <p className="text-blue-600 dark:text-blue-400">Weekend tidak ditampilkan. Maksimal 1 bulan data per cetak.</p>
               </div>
             </div>
           )}
