@@ -8,6 +8,7 @@ import { getAllClasses } from '@/data/classesData';
 import {
   getAttendanceByClassAndDateRange,
   calculateAttendanceStats,
+  calculateClassAttendanceStats,
   getAvailableDates
 } from '@/data/attendanceData';
 
@@ -98,13 +99,13 @@ export default function LaporanAbsenPage() {
       // Get attendance data for this class and date range
       const attendanceRecords = getAttendanceByClassAndDateRange(cls.name, reportStartDate, reportEndDate);
 
-      // Calculate statistics using the helper function
-      const stats = calculateAttendanceStats(attendanceRecords);
+      // Calculate statistics using the class-specific helper function
+      const stats = calculateClassAttendanceStats(attendanceRecords);
 
       return {
         date: reportStartDate === reportEndDate ? reportStartDate : `${reportStartDate} - ${reportEndDate}`,
         className: cls.name,
-        totalStudents: stats.total,
+        totalStudents: stats.totalStudents,
         present: stats.present,
         late: stats.late,
         absent: stats.absent,
@@ -144,7 +145,271 @@ export default function LaporanAbsenPage() {
   };
 
   const printReport = () => {
-    window.print();
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    // Get current date and time for the report
+    const now = new Date();
+    const reportDate = now.toLocaleDateString('id-ID', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const reportTime = now.toLocaleTimeString('id-ID');
+
+    // Determine the period text
+    let periodText = '';
+    if (selectedDateRange === 'today') {
+      periodText = 'Hari Ini';
+    } else if (selectedDateRange === 'week') {
+      periodText = 'Minggu Ini';
+    } else if (selectedDateRange === 'month') {
+      periodText = 'Bulan Ini';
+    } else {
+      periodText = `${startDate} - ${endDate}`;
+    }
+
+    // Calculate totals for summary
+    const totalStudents = selectedClass !== 'all' && reports.length === 1
+      ? reports[0].totalStudents
+      : reports.reduce((sum, report) => sum + report.totalStudents, 0);
+    const avgPresent = reports.length > 0
+      ? reports.reduce((sum, report) => sum + report.present, 0) / reports.length
+      : 0;
+    const avgAbsent = reports.length > 0
+      ? reports.reduce((sum, report) => sum + report.absent, 0) / reports.length
+      : 0;
+    const avgAttendanceRate = reports.length > 0
+      ? Math.round((reports.reduce((sum, report) => sum + report.attendanceRate, 0) / reports.length) * 100) / 100
+      : 0;
+
+    // Create the print content
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Laporan Absensi - ${periodText}</title>
+        <style>
+          @media print {
+            @page {
+              margin: 1cm;
+              size: A4;
+            }
+            body {
+              font-family: Arial, sans-serif;
+              font-size: 12px;
+              line-height: 1.4;
+              color: #000;
+              background: white;
+            }
+            .no-print {
+              display: none !important;
+            }
+          }
+
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: white;
+            color: #000;
+          }
+
+          .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+          }
+
+          .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+          }
+
+          .header h2 {
+            margin: 5px 0;
+            font-size: 18px;
+            font-weight: normal;
+          }
+
+          .header p {
+            margin: 5px 0;
+            font-size: 14px;
+          }
+
+          .summary {
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            padding: 15px;
+            border: 1px solid #ddd;
+          }
+
+          .summary h3 {
+            margin: 0 0 15px 0;
+            font-size: 16px;
+          }
+
+          .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+          }
+
+          .summary-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+          }
+
+          .summary-item .value {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+          }
+
+          .summary-item .label {
+            font-size: 12px;
+            color: #666;
+          }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+          }
+
+          th, td {
+            border: 1px solid #000;
+            padding: 8px;
+            text-align: left;
+          }
+
+          th {
+            background-color: #f0f0f0;
+            font-weight: bold;
+            text-align: center;
+          }
+
+          td {
+            text-align: center;
+          }
+
+          .footer {
+            margin-top: 40px;
+            text-align: right;
+            font-size: 12px;
+          }
+
+          .signature {
+            margin-top: 60px;
+            text-align: right;
+          }
+
+          .signature-line {
+            margin-top: 80px;
+            border-top: 1px solid #000;
+            width: 200px;
+            margin-left: auto;
+            text-align: center;
+            padding-top: 5px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>LAPORAN ABSENSI SISWA</h1>
+          <h2>SD NEGERI CONTOH</h2>
+          <p>Periode: ${periodText}</p>
+          <p>Tanggal Cetak: ${reportDate}, ${reportTime}</p>
+        </div>
+
+        <div class="summary">
+          <h3>Ringkasan Absensi</h3>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <div class="value">${totalStudents}</div>
+              <div class="label">Total Siswa</div>
+            </div>
+            <div class="summary-item">
+              <div class="value">${avgPresent.toFixed(1)}</div>
+              <div class="label">Rata-rata Hadir</div>
+            </div>
+            <div class="summary-item">
+              <div class="value">${avgAbsent.toFixed(1)}</div>
+              <div class="label">Rata-rata Tidak Hadir</div>
+            </div>
+            <div class="summary-item">
+              <div class="value">${avgAttendanceRate}%</div>
+              <div class="label">Tingkat Kehadiran</div>
+            </div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Tanggal</th>
+              <th>Kelas</th>
+              <th>Total Siswa</th>
+              <th>Hadir</th>
+              <th>Terlambat</th>
+              <th>Tidak Hadir</th>
+              <th>Izin</th>
+              <th>Tingkat Kehadiran</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reports.map((report, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${report.date.includes(' - ') ? (() => {
+                  const [startDate, endDate] = report.date.split(' - ');
+                  const startFormatted = new Date(startDate).toLocaleDateString('id-ID');
+                  const endFormatted = new Date(endDate).toLocaleDateString('id-ID');
+                  return `${startFormatted} - ${endFormatted}`;
+                })() : new Date(report.date).toLocaleDateString('id-ID')}</td>
+                <td>${report.className}</td>
+                <td>${report.totalStudents}</td>
+                <td>${report.present}</td>
+                <td>${report.late}</td>
+                <td>${report.absent}</td>
+                <td>${report.excused}</td>
+                <td>${report.attendanceRate}%</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <p>Laporan ini digenerate secara otomatis oleh Sistem Absensi Digital</p>
+        </div>
+
+        <div class="signature">
+          <p>Mengetahui,</p>
+          <div class="signature-line">
+            Kepala Sekolah
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    // Write content to print window
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+
+    // Wait for content to load, then print
+    printWindow.onload = () => {
+      printWindow.print();
+      printWindow.close();
+    };
   };
 
   if (loading) {
@@ -277,23 +542,29 @@ export default function LaporanAbsenPage() {
               Total Siswa
             </h3>
             <p className="text-3xl font-bold text-blue-600">
-              {reports.reduce((sum, report) => sum + report.totalStudents, 0)}
+              {selectedClass !== 'all' && reports.length === 1
+                ? reports[0].totalStudents
+                : reports.reduce((sum, report) => sum + report.totalStudents, 0)}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Hadir
+              Rata-rata Hadir
             </h3>
             <p className="text-3xl font-bold text-green-600">
-              {reports.reduce((sum, report) => sum + report.present, 0)}
+              {reports.length > 0
+                ? reports.reduce((sum, report) => sum + report.present, 0) / reports.length
+                : 0}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Tidak Hadir
+              Rata-rata Tidak Hadir
             </h3>
             <p className="text-3xl font-bold text-red-600">
-              {reports.reduce((sum, report) => sum + report.absent, 0)}
+              {reports.length > 0
+                ? reports.reduce((sum, report) => sum + report.absent, 0) / reports.length
+                : 0}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
@@ -301,8 +572,8 @@ export default function LaporanAbsenPage() {
               Tingkat Kehadiran
             </h3>
             <p className="text-3xl font-bold text-purple-600">
-              {reports.length > 0 ? 
-                Math.round((reports.reduce((sum, report) => sum + report.attendanceRate, 0) / reports.length) * 100) / 100 
+              {reports.length > 0 ?
+                Math.round((reports.reduce((sum, report) => sum + report.attendanceRate, 0) / reports.length) * 100) / 100
                 : 0}%
             </p>
           </div>
@@ -350,7 +621,18 @@ export default function LaporanAbsenPage() {
                 {reports.map((report, index) => (
                   <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {new Date(report.date).toLocaleDateString('id-ID')}
+                      {report.date.includes(' - ') ? (
+                        // Date range format
+                        (() => {
+                          const [startDate, endDate] = report.date.split(' - ');
+                          const startFormatted = new Date(startDate).toLocaleDateString('id-ID');
+                          const endFormatted = new Date(endDate).toLocaleDateString('id-ID');
+                          return `${startFormatted} - ${endFormatted}`;
+                        })()
+                      ) : (
+                        // Single date format
+                        new Date(report.date).toLocaleDateString('id-ID')
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
@@ -374,7 +656,7 @@ export default function LaporanAbsenPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
+                        <div className="w-24 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-2">
                           <div
                             className="bg-green-600 h-2 rounded-full"
                             style={{ width: `${report.attendanceRate}%` }}

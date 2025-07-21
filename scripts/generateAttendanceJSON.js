@@ -1,16 +1,21 @@
-// Script to generate complete attendance data in JSON format
+// Script to generate attendance data for the last 30 days in JSON format
 const fs = require('fs');
 const path = require('path');
 
-// Generate attendance data for December 2024 and January 2025
+// Generate attendance data for the last 30 days
 const generateAttendanceJSON = () => {
+  // Calculate date range for last 30 days
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - 30);
+
   const data = {
     metadata: {
       generatedAt: new Date().toISOString(),
       totalRecords: 0,
       dateRange: {
-        start: "2024-12-01",
-        end: "2025-01-31"
+        start: startDate.toISOString().split('T')[0],
+        end: endDate.toISOString().split('T')[0]
       },
       schoolDays: 0,
       classes: ['1A', '1B', '2A', '2B', '3A', '3B', '4A', '4B', '5A', '5B', '6A', '6B'],
@@ -70,14 +75,15 @@ const generateAttendanceJSON = () => {
     }
   });
 
-  // Generate attendance records
-  const startDate = new Date('2024-12-01');
-  const endDate = new Date('2025-01-31');
-  let currentDate = new Date(startDate);
+  // Generate attendance records for the last 30 days
+  const recordEndDate = new Date();
+  const recordStartDate = new Date();
+  recordStartDate.setDate(recordEndDate.getDate() - 30);
+  let currentDate = new Date(recordStartDate);
   let recordId = 1;
   let schoolDays = 0;
 
-  while (currentDate <= endDate) {
+  while (currentDate <= recordEndDate) {
     // Skip weekends
     if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
       schoolDays++;

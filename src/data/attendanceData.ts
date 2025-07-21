@@ -81,11 +81,40 @@ export const getAttendanceByStudent = (studentId: string): AttendanceRecord[] =>
 };
 
 export const getAttendanceByClassAndDateRange = (className: string, startDate: string, endDate: string): AttendanceRecord[] => {
-  return attendanceData.filter(record => 
-    record.className === className && 
-    record.date >= startDate && 
+  return attendanceData.filter(record =>
+    record.className === className &&
+    record.date >= startDate &&
     record.date <= endDate
   );
+};
+
+// Get attendance data for the last N days
+export const getAttendanceForLastDays = (days: number = 30): AttendanceRecord[] => {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - days);
+
+  const startDateStr = startDate.toISOString().split('T')[0];
+  const endDateStr = endDate.toISOString().split('T')[0];
+
+  return getAttendanceByDateRange(startDateStr, endDateStr);
+};
+
+// Get attendance data for the last 30 days (convenience function)
+export const getAttendanceForLast30Days = (): AttendanceRecord[] => {
+  return getAttendanceForLastDays(30);
+};
+
+// Get attendance data for the last N days by class
+export const getAttendanceForLastDaysByClass = (className: string, days: number = 30): AttendanceRecord[] => {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - days);
+
+  const startDateStr = startDate.toISOString().split('T')[0];
+  const endDateStr = endDate.toISOString().split('T')[0];
+
+  return getAttendanceByClassAndDateRange(className, startDateStr, endDateStr);
 };
 
 // Statistics helper functions
@@ -95,15 +124,72 @@ export const calculateAttendanceStats = (records: AttendanceRecord[]) => {
   const late = records.filter(r => r.status === 'Terlambat').length;
   const absent = records.filter(r => r.status === 'Tidak Hadir').length;
   const excused = records.filter(r => r.status === 'Izin').length;
-  
+
   const attendanceRate = total > 0 ? ((present + late) / total) * 100 : 0;
-  
+
   return {
     total,
     present,
     late,
     absent,
     excused,
+    attendanceRate: Math.round(attendanceRate * 100) / 100
+  };
+};
+
+// Calculate statistics based on unique students (for class summaries)
+export const calculateClassAttendanceStats = (records: AttendanceRecord[]) => {
+  // Get unique students and dates from the records
+  const uniqueStudents = [...new Set(records.map(r => r.studentId))];
+  const uniqueDates = [...new Set(records.map(r => r.date))];
+  const totalStudents = uniqueStudents.length;
+  const totalDays = uniqueDates.length;
+
+  if (totalStudents === 0 || totalDays === 0) {
+    return {
+      totalStudents: 0,
+      present: 0,
+      late: 0,
+      absent: 0,
+      excused: 0,
+      attendanceRate: 0
+    };
+  }
+
+  // Calculate daily averages
+  let totalPresentCount = 0;
+  let totalLateCount = 0;
+  let totalAbsentCount = 0;
+  let totalExcusedCount = 0;
+
+  // For each date, count the attendance status
+  uniqueDates.forEach(date => {
+    const dayRecords = records.filter(r => r.date === date);
+    const presentOnTime = dayRecords.filter(r => r.status === 'Hadir').length;
+    const lateStudents = dayRecords.filter(r => r.status === 'Terlambat').length;
+
+    // Include late students in present count
+    totalPresentCount += (presentOnTime + lateStudents);
+    totalLateCount += lateStudents; // Keep separate count for detailed stats
+    totalAbsentCount += dayRecords.filter(r => r.status === 'Tidak Hadir').length;
+    totalExcusedCount += dayRecords.filter(r => r.status === 'Izin').length;
+  });
+
+  // Calculate averages per day
+  const avgPresent = Math.round((totalPresentCount / totalDays) * 100) / 100;
+  const avgLate = Math.round((totalLateCount / totalDays) * 100) / 100;
+  const avgAbsent = Math.round((totalAbsentCount / totalDays) * 100) / 100;
+  const avgExcused = Math.round((totalExcusedCount / totalDays) * 100) / 100;
+
+  const totalRecords = totalPresentCount + totalLateCount + totalAbsentCount + totalExcusedCount;
+  const attendanceRate = totalRecords > 0 ? ((totalPresentCount + totalLateCount) / totalRecords) * 100 : 0;
+
+  return {
+    totalStudents,
+    present: avgPresent,
+    late: avgLate,
+    absent: avgAbsent,
+    excused: avgExcused,
     attendanceRate: Math.round(attendanceRate * 100) / 100
   };
 };
@@ -148,7 +234,7 @@ export const getAttendanceSummaryByClass = (className: string, startDate: string
   };
 };
 
-console.log(`Loaded ${attendanceData.length} attendance records from JSON data`);
+console.log(`Loaded ${attendanceData.length} attendance records from JSON data (Last 30 days)`);
 console.log(`Date range: ${attendanceMetadata.dateRange.start} to ${attendanceMetadata.dateRange.end}`);
 console.log(`Available dates: ${getAvailableDates().length} school days`);
 console.log(`Classes covered: ${attendanceMetadata.classes.length} classes with ${attendanceMetadata.studentsPerClass} students each`);

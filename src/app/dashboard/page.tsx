@@ -74,7 +74,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                Informasi Kelas
+                {admin ? 'Informasi dan Jabatan' : 'Informasi Kelas'}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">

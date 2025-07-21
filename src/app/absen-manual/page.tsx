@@ -60,7 +60,7 @@ export default function ManualAttendancePage() {
       return {
         ...student,
         status: attendanceRecord?.status || 'Hadir' as AttendanceStatus,
-        timeIn: attendanceRecord?.timeIn,
+        checkInTime: attendanceRecord?.timeIn, // Map timeIn to checkInTime
         notes: attendanceRecord?.notes
       };
     });
