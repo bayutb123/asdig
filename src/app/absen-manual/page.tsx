@@ -10,7 +10,7 @@ import { Student, getStudentsByClass } from '@/data/studentsData';
 
 
 export default function ManualAttendancePage() {
-  const { teacher, logout, isLoading } = useAuth();
+  const { user, teacher, admin, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useAuth();
   const router = useRouter();
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -19,13 +19,18 @@ export default function ManualAttendancePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
-  // Load students for teacher's class only
+  // Load students for teacher's class or all students for admin
   useEffect(() => {
-    if (teacher?.className) {
+    if (hasTeacherAccess && teacher?.className) {
       const classStudents = getStudentsByClass(teacher.className);
       setStudents(classStudents);
+    } else if (hasAdminAccess) {
+      // Admin can see all students - for now, show first class as example
+      // In a real app, admin would select which class to manage
+      const allStudents = getStudentsByClass('1A'); // Default to first class
+      setStudents(allStudents);
     }
-  }, [teacher]);
+  }, [teacher, admin, hasTeacherAccess, hasAdminAccess]);
 
   const handleStatusChange = (studentId: string, newStatus: Student['status']) => {
     setStudents(prev => prev.map(student => {
@@ -182,7 +187,7 @@ export default function ManualAttendancePage() {
                     Absen Manual - SD
                   </h1>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {teacher ? `Kelas ${teacher.className} - ${teacher.name}` : 'Loading...'}
+                    {admin ? `Admin - ${admin.name}` : teacher ? `Kelas ${teacher.className} - ${teacher.name}` : 'Loading...'}
                   </p>
                 </div>
               </div>

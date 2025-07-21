@@ -7,7 +7,7 @@ import AttendanceTable from '@/components/AttendanceTable';
 import Link from 'next/link';
 
 export default function DashboardPage() {
-  const { teacher, logout, isLoading } = useAuth();
+  const { user, teacher, admin, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useAuth();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -15,8 +15,8 @@ export default function DashboardPage() {
     router.push('/login');
   };
 
-  // Show loading if auth is still loading or teacher data is not available
-  if (isLoading || !teacher) {
+  // Show loading if auth is still loading or no user data is available
+  if (isLoading || (!teacher && !admin)) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
@@ -38,22 +38,22 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Dashboard Wali Kelas
+                {admin ? 'Dashboard Admin' : 'Dashboard Wali Kelas'}
               </h1>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Selamat datang, {teacher?.name || 'Loading...'}
+                Selamat datang, {admin?.name || teacher?.name || 'Loading...'}
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {teacher?.name || 'Loading...'}
+                  {admin?.name || teacher?.name || 'Loading...'}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-300">
-                  Guru Kelas {teacher?.className || '...'}
+                  {admin ? `Admin - ${admin.position}` : `Guru Kelas ${teacher?.className || '...'}`}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  NIP: {teacher?.nip || '...'}
+                  NIP: {admin?.nip || teacher?.nip || '...'}
                 </p>
               </div>
               <button
@@ -84,7 +84,9 @@ export default function DashboardPage() {
                     </svg>
                     <div>
                       <p className="text-sm text-blue-600 dark:text-blue-400">Kelas</p>
-                      <p className="text-lg font-semibold text-blue-800 dark:text-blue-200">{teacher?.className || 'Loading...'}</p>
+                      <p className="text-lg font-semibold text-blue-800 dark:text-blue-200">
+                        {admin ? admin.position : teacher?.className || 'Loading...'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -94,8 +96,8 @@ export default function DashboardPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     <div>
-                      <p className="text-sm text-green-600 dark:text-green-400">Wali Kelas</p>
-                      <p className="text-lg font-semibold text-green-800 dark:text-green-200">{teacher?.name || 'Loading...'}</p>
+                      <p className="text-sm text-green-600 dark:text-green-400">{admin ? 'Admin' : 'Wali Kelas'}</p>
+                      <p className="text-lg font-semibold text-green-800 dark:text-green-200">{admin?.name || teacher?.name || 'Loading...'}</p>
                     </div>
                   </div>
                 </div>
@@ -106,7 +108,7 @@ export default function DashboardPage() {
                     </svg>
                     <div>
                       <p className="text-sm text-purple-600 dark:text-purple-400">NIP</p>
-                      <p className="text-lg font-semibold text-purple-800 dark:text-purple-200">{teacher?.nip || 'Loading...'}</p>
+                      <p className="text-lg font-semibold text-purple-800 dark:text-purple-200">{admin?.nip || teacher?.nip || 'Loading...'}</p>
                     </div>
                   </div>
                 </div>
@@ -116,7 +118,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className={`grid grid-cols-1 gap-4 mb-8 ${hasAdminAccess ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
           <Link
             href="/absen-manual"
             className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-center block"
@@ -136,13 +138,18 @@ export default function DashboardPage() {
             <p className="text-sm text-gray-600 dark:text-gray-300">Lihat laporan absensi</p>
           </button>
           
-          <button className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-center">
-            <svg className="h-8 w-8 text-yellow-600 dark:text-yellow-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <h3 className="font-semibold text-gray-900 dark:text-white">Data Siswa</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300">Kelola data siswa</p>
-          </button>
+          {hasAdminAccess && (
+            <Link
+              href="/kelola-kelas"
+              className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-center block"
+            >
+              <svg className="h-8 w-8 text-yellow-600 dark:text-yellow-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <h3 className="font-semibold text-gray-900 dark:text-white">Kelola Kelas</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Tambah & kelola kelas</p>
+            </Link>
+          )}
           
           <button className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-center">
             <svg className="h-8 w-8 text-purple-600 dark:text-purple-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
