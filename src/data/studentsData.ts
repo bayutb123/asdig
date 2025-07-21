@@ -10,225 +10,73 @@ export interface Student {
   notes?: string;
 }
 
-// Centralized student data - consistent across all components
-export const allStudentsData: Student[] = [
-  // 12 IPA 1 - Wali Kelas: Ibu Sari Dewi, S.Pd
-  {
-    id: '1',
-    name: 'Ahmad Rizki Pratama',
-    studentId: 'SIS001',
-    class: '12 IPA 1',
-    status: 'Hadir',
-    checkInTime: '07:15',
-    date: '2025-01-21'
-  },
-  {
-    id: '2',
-    name: 'Siti Nurhaliza Putri',
-    studentId: 'SIS002',
-    class: '12 IPA 1',
-    status: 'Hadir',
-    checkInTime: '07:10',
-    date: '2025-01-21'
-  },
-  {
-    id: '3',
-    name: 'Andi Pratama Wijaya',
-    studentId: 'SIS003',
-    class: '12 IPA 1',
-    status: 'Hadir',
-    checkInTime: '07:05',
-    date: '2025-01-21'
-  },
-  {
-    id: '4',
-    name: 'Fajar Nugroho Adi',
-    studentId: 'SIS004',
-    class: '12 IPA 1',
-    status: 'Hadir',
-    checkInTime: '07:12',
-    date: '2025-01-21'
-  },
-  {
-    id: '5',
-    name: 'Lestari Dewi Sari',
-    studentId: 'SIS005',
-    class: '12 IPA 1',
-    status: 'Tidak Hadir',
-    date: '2025-01-21'
-  },
-  {
-    id: '6',
-    name: 'Bayu Adi Nugroho',
-    studentId: 'SIS006',
-    class: '12 IPA 1',
-    status: 'Terlambat',
-    checkInTime: '07:50',
-    date: '2025-01-21'
-  },
-
-  // 12 IPA 2 - Wali Kelas: Bapak Ahmad Wijaya, S.Pd
-  {
-    id: '7',
-    name: 'Budi Santoso',
-    studentId: 'SIS007',
-    class: '12 IPA 2',
-    status: 'Terlambat',
-    checkInTime: '07:45',
-    date: '2025-01-21'
-  },
-  {
-    id: '8',
-    name: 'Reza Firmansyah',
-    studentId: 'SIS008',
-    class: '12 IPA 2',
-    status: 'Hadir',
-    checkInTime: '07:20',
-    date: '2025-01-21'
-  },
-  {
-    id: '9',
-    name: 'Dimas Arya Saputra',
-    studentId: 'SIS009',
-    class: '12 IPA 2',
-    status: 'Hadir',
-    checkInTime: '07:08',
-    date: '2025-01-21'
-  },
-  {
-    id: '10',
-    name: 'Citra Maharani',
-    studentId: 'SIS010',
-    class: '12 IPA 2',
-    status: 'Tidak Hadir',
-    date: '2025-01-21'
-  },
-  {
-    id: '11',
-    name: 'Galang Pratama',
-    studentId: 'SIS011',
-    class: '12 IPA 2',
-    status: 'Hadir',
-    checkInTime: '07:18',
-    date: '2025-01-21'
-  },
-  {
-    id: '12',
-    name: 'Putri Ayu Lestari',
-    studentId: 'SIS012',
-    class: '12 IPA 2',
-    status: 'Izin',
-    date: '2025-01-21'
-  },
-
-  // 12 IPS 1 - Wali Kelas: Ibu Maya Sari, S.Pd
-  {
-    id: '13',
-    name: 'Maya Sari Dewi',
-    studentId: 'SIS013',
-    class: '12 IPS 1',
-    status: 'Tidak Hadir',
-    date: '2025-01-21'
-  },
-  {
-    id: '14',
-    name: 'Indira Putri Maharani',
-    studentId: 'SIS014',
-    class: '12 IPS 1',
-    status: 'Terlambat',
-    checkInTime: '07:50',
-    date: '2025-01-21'
-  },
-  {
-    id: '15',
-    name: 'Anisa Rahma Sari',
-    studentId: 'SIS015',
-    class: '12 IPS 1',
-    status: 'Hadir',
-    checkInTime: '07:18',
-    date: '2025-01-21'
-  },
-  {
-    id: '16',
-    name: 'Galih Pratama',
-    studentId: 'SIS016',
-    class: '12 IPS 1',
-    status: 'Hadir',
-    checkInTime: '07:15',
-    date: '2025-01-21'
-  },
-  {
-    id: '17',
-    name: 'Sari Wulandari',
-    studentId: 'SIS017',
-    class: '12 IPS 1',
-    status: 'Hadir',
-    checkInTime: '07:08',
-    date: '2025-01-21'
-  },
-  {
-    id: '18',
-    name: 'Eko Prasetyo',
-    studentId: 'SIS018',
-    class: '12 IPS 1',
-    status: 'Tidak Hadir',
-    date: '2025-01-21'
-  },
-
-  // 12 IPS 2 - Wali Kelas: Bapak Dedi Kurniawan, S.Pd
-  {
-    id: '19',
-    name: 'Dewi Lestari Sari',
-    studentId: 'SIS019',
-    class: '12 IPS 2',
-    status: 'Izin',
-    date: '2025-01-21'
-  },
-  {
-    id: '20',
-    name: 'Rina Maharani Putri',
-    studentId: 'SIS020',
-    class: '12 IPS 2',
-    status: 'Tidak Hadir',
-    date: '2025-01-21'
-  },
-  {
-    id: '21',
-    name: 'Hendra Wijaya',
-    studentId: 'SIS021',
-    class: '12 IPS 2',
-    status: 'Hadir',
-    checkInTime: '07:12',
-    date: '2025-01-21'
-  },
-  {
-    id: '22',
-    name: 'Intan Permata',
-    studentId: 'SIS022',
-    class: '12 IPS 2',
-    status: 'Hadir',
-    checkInTime: '07:20',
-    date: '2025-01-21'
-  },
-  {
-    id: '23',
-    name: 'Arif Budiman',
-    studentId: 'SIS023',
-    class: '12 IPS 2',
-    status: 'Terlambat',
-    checkInTime: '07:55',
-    date: '2025-01-21'
-  },
-  {
-    id: '24',
-    name: 'Novi Rahayu',
-    studentId: 'SIS024',
-    class: '12 IPS 2',
-    status: 'Hadir',
-    checkInTime: '07:05',
-    date: '2025-01-21'
-  }
+// Indonesian names for generating student data
+const indonesianNames = [
+  'Ahmad Rizki', 'Siti Nurhaliza', 'Andi Pratama', 'Fajar Nugroho', 'Lestari Dewi', 'Bayu Adi',
+  'Budi Santoso', 'Reza Firmansyah', 'Dimas Arya', 'Citra Maharani', 'Galang Pratama', 'Putri Ayu',
+  'Maya Sari', 'Indira Putri', 'Anisa Rahma', 'Galih Pratama', 'Sari Wulandari', 'Eko Prasetyo',
+  'Dewi Lestari', 'Rina Maharani', 'Hendra Wijaya', 'Intan Permata', 'Arif Budiman', 'Novi Rahayu',
+  'Adi Nugroho', 'Sinta Dewi', 'Bagas Pratama', 'Lina Sari', 'Doni Setiawan', 'Eka Putri',
+  'Fandi Wijaya', 'Gita Maharani', 'Hadi Pratama', 'Ira Lestari', 'Joko Santoso', 'Kiki Amelia'
 ];
+
+const checkInTimes = ['07:05', '07:08', '07:10', '07:12', '07:15', '07:18', '07:20', '07:22', '07:25', '07:30', '07:45', '07:50'];
+
+// Function to generate students for a class
+const generateStudentsForClass = (className: string, startId: number): Student[] => {
+  const students: Student[] = [];
+
+  for (let i = 0; i < 36; i++) {
+    const id = startId + i;
+    const nameIndex = i % indonesianNames.length;
+    const statusIndex = Math.floor(Math.random() * 10); // 80% chance of being present
+    let status: 'Hadir' | 'Tidak Hadir' | 'Terlambat' | 'Izin';
+
+    if (statusIndex < 7) status = 'Hadir';
+    else if (statusIndex < 8) status = 'Terlambat';
+    else if (statusIndex < 9) status = 'Tidak Hadir';
+    else status = 'Izin';
+
+    const student: Student = {
+      id: id.toString(),
+      name: indonesianNames[nameIndex] + (i >= indonesianNames.length ? ` ${Math.floor(i / indonesianNames.length) + 1}` : ''),
+      studentId: `SD${id.toString().padStart(3, '0')}`,
+      class: className,
+      status: status,
+      date: '2025-01-21'
+    };
+
+    // Add check-in time for present and late students
+    if (status === 'Hadir' || status === 'Terlambat') {
+      const timeIndex = status === 'Terlambat' ?
+        checkInTimes.length - 2 + Math.floor(Math.random() * 2) : // Late times
+        Math.floor(Math.random() * (checkInTimes.length - 2)); // Regular times
+      student.checkInTime = checkInTimes[timeIndex];
+    }
+
+    students.push(student);
+  }
+
+  return students;
+};
+
+// Generate all student data for 12 classes (36 students each = 432 total)
+const generateAllStudents = (): Student[] => {
+  const classes = ['1A', '1B', '2A', '2B', '3A', '3B', '4A', '4B', '5A', '5B', '6A', '6B'];
+  let allStudents: Student[] = [];
+  let currentId = 1;
+
+  classes.forEach(className => {
+    const classStudents = generateStudentsForClass(className, currentId);
+    allStudents = allStudents.concat(classStudents);
+    currentId += 36;
+  });
+
+  return allStudents;
+};
+
+// Centralized student data - Elementary School (Sekolah Dasar) - 36 students per class
+export const allStudentsData: Student[] = generateAllStudents();
 
 // Helper function to get students by class
 export const getStudentsByClass = (className: string): Student[] => {

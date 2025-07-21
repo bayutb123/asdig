@@ -50,7 +50,7 @@ export default function DashboardPage() {
                   {teacher?.name || 'Loading...'}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-300">
-                  Wali Kelas {teacher?.className || '...'}
+                  Guru Kelas {teacher?.className || '...'}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   NIP: {teacher?.nip || '...'}

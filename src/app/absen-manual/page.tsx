@@ -179,10 +179,10 @@ export default function ManualAttendancePage() {
                 </Link>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Absen Manual
+                    Absen Manual - SD
                   </h1>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {teacher ? `Kelas ${teacher.class} - ${teacher.name}` : 'Loading...'}
+                    {teacher ? `Kelas ${teacher.className} - ${teacher.name}` : 'Loading...'}
                   </p>
                 </div>
               </div>

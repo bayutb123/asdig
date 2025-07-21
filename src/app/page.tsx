@@ -8,10 +8,10 @@ export default function Home() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Absen Digital
+            Absen Digital - Sekolah Dasar
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
-            Sistem Manajemen Absensi Siswa
+            Sistem Manajemen Absensi Siswa SD
           </p>
 
           {/* Login Button */}

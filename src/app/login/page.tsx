@@ -69,7 +69,7 @@ export default function LoginPage() {
             </h1>
           </Link>
           <p className="text-gray-600 dark:text-gray-300">
-            Portal Login Wali Kelas
+            Portal Login Guru Kelas SD
           </p>
         </div>
 
@@ -163,7 +163,7 @@ export default function LoginPage() {
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Demo Akun Wali Kelas:
+              Demo Akun Guru Kelas SD:
             </h3>
             <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
               {getAllTeachers().map((teacher) => (
