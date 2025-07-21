@@ -55,31 +55,24 @@ export default function KelolaKelasPage() {
     // Create class data
     const classData = {
       name: className,
-      level: newClass.level,
+      grade: parseInt(newClass.level),
       section: newClass.section,
       teacherId: '', // Will be set by context
       teacherName: newClass.teacherName,
-      teacherNip: newClass.teacherNip,
-      academicYear: '2024/2025',
-      semester: 1,
-      maxStudents: newClass.maxStudents,
-      currentStudents: 0,
-      schedule: [
-        { day: 'Senin', startTime: '07:00', endTime: '12:00', subject: 'Tematik' },
-        { day: 'Selasa', startTime: '07:00', endTime: '12:00', subject: 'Tematik' },
-        { day: 'Rabu', startTime: '07:00', endTime: '12:00', subject: 'Tematik' },
-        { day: 'Kamis', startTime: '07:00', endTime: '12:00', subject: 'Tematik' },
-        { day: 'Jumat', startTime: '07:00', endTime: '11:00', subject: 'Tematik' },
-      ]
+      studentCount: 0
     };
 
     // Create teacher data
     const teacherData = {
       name: newClass.teacherName,
       nip: newClass.teacherNip,
+      username: `walikelas${newClass.level.toLowerCase()}${newClass.section.toLowerCase()}`,
+      password: 'password123',
       className: className,
+      subject: 'Wali Kelas',
       phone: newClass.teacherPhone,
-      email: newClass.teacherEmail
+      email: newClass.teacherEmail,
+      role: 'teacher' as const
     };
 
     // Add new class using context
@@ -188,7 +181,7 @@ export default function KelolaKelasPage() {
               Total Siswa
             </h3>
             <p className="text-3xl font-bold text-purple-600">
-              {classes.reduce((sum, cls) => sum + cls.currentStudents, 0)}
+              {classes.reduce((sum, cls) => sum + cls.studentCount, 0)}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
@@ -196,7 +189,7 @@ export default function KelolaKelasPage() {
               Kapasitas Total
             </h3>
             <p className="text-3xl font-bold text-orange-600">
-              {classes.reduce((sum, cls) => sum + cls.maxStudents, 0)}
+              {classes.length * 36}
             </p>
           </div>
         </div>
@@ -241,7 +234,7 @@ export default function KelolaKelasPage() {
                         {cls.name}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Tingkat {cls.level} - Bagian {cls.section}
+                        Tingkat {cls.grade} - Bagian {cls.section}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -250,21 +243,21 @@ export default function KelolaKelasPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {cls.teacherNip}
+                      {cls.teacherId}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {cls.currentStudents}/{cls.maxStudents}
+                        {cls.studentCount}/36
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full" 
-                          style={{ width: `${(cls.currentStudents / cls.maxStudents) * 100}%` }}
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${(cls.studentCount / 36) * 100}%` }}
                         ></div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {cls.academicYear}
+                      2024/2025
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4">

@@ -384,7 +384,7 @@ export default function ManualAttendancePage() {
                         {index + 1}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-gray-100">
-                        {student.studentId}
+                        {student.nisn}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                         {student.name}

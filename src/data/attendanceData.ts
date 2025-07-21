@@ -1,5 +1,7 @@
 // Centralized Attendance Data for Absen Digital SD
-// Contains 1+ month of prepopulated attendance records
+// Loads attendance data from JSON file
+
+import attendanceDataJSON from './attendanceData.json';
 
 export type AttendanceStatus = 'Hadir' | 'Terlambat' | 'Tidak Hadir' | 'Izin';
 
@@ -16,126 +18,46 @@ export interface AttendanceRecord {
   recordedAt: string; // Timestamp when recorded
 }
 
-// Generate attendance data for December 2024 and January 2025
-const generateAttendanceData = (): AttendanceRecord[] => {
-  const records: AttendanceRecord[] = [];
-  
-  // Date range: December 1, 2024 to January 31, 2025 (weekdays only)
-  const startDate = new Date('2024-12-01');
-  const endDate = new Date('2025-01-31');
-  
-  // All classes
-  const classes = ['1A', '1B', '2A', '2B', '3A', '3B', '4A', '4B', '5A', '5B', '6A', '6B'];
-  
-  // Students per class (36 each)
-  const studentsPerClass = 36;
-  
-  // Generate student IDs and names for each class
-  const allStudents: { id: string; name: string; className: string }[] = [];
-  
-  classes.forEach(className => {
-    for (let i = 1; i <= studentsPerClass; i++) {
-      const studentId = `${className.toLowerCase()}-${i.toString().padStart(3, '0')}`;
-      const names = [
-        'Ahmad Rizki', 'Siti Nurhaliza', 'Budi Santoso', 'Dewi Sartika', 'Andi Wijaya',
-        'Fatimah Zahra', 'Dimas Pratama', 'Indira Sari', 'Fajar Nugroho', 'Ayu Lestari',
-        'Reza Firmansyah', 'Maya Putri', 'Arif Rahman', 'Sari Dewi', 'Yoga Pratama',
-        'Nia Ramadhani', 'Bayu Setiawan', 'Rina Marlina', 'Eko Prasetyo', 'Dina Anggraini',
-        'Hadi Kusuma', 'Lina Sari', 'Agus Salim', 'Wulan Dari', 'Irfan Hakim',
-        'Sinta Bella', 'Doni Saputra', 'Mega Wati', 'Rian Hidayat', 'Tari Sari',
-        'Vino Mahendra', 'Yuni Astuti', 'Zaki Maulana', 'Nisa Aulia', 'Oki Setia',
-        'Putri Ayu'
-      ];
-      
-      allStudents.push({
-        id: studentId,
-        name: names[i - 1] || `Siswa ${i}`,
-        className
-      });
-    }
-  });
+export interface AttendanceDataStructure {
+  metadata: {
+    generatedAt: string;
+    totalRecords: number;
+    dateRange: {
+      start: string;
+      end: string;
+    };
+    schoolDays: number;
+    classes: string[];
+    studentsPerClass: number;
+    totalStudents: number;
+    attendancePatterns: {
+      present: number;
+      late: number;
+      absent: number;
+      excused: number;
+    };
+  };
+  students: Array<{
+    id: string;
+    name: string;
+    className: string;
+  }>;
+  teachers: Record<string, string>;
+  excuseReasons: string[];
+  attendanceRecords: AttendanceRecord[];
+}
 
-  // Generate attendance records for each school day
-  let currentDate = new Date(startDate);
-  let recordId = 1;
-  
-  while (currentDate <= endDate) {
-    // Skip weekends (Saturday = 6, Sunday = 0)
-    if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
-      const dateString = currentDate.toISOString().split('T')[0];
-      
-      allStudents.forEach(student => {
-        // Generate realistic attendance patterns
-        const randomFactor = Math.random();
-        let status: AttendanceStatus;
-        let timeIn: string | undefined;
-        let notes: string | undefined;
-        
-        // Attendance probability: 85% present, 8% late, 5% absent, 2% excused
-        if (randomFactor < 0.85) {
-          status = 'Hadir';
-          // Random arrival time between 07:00-07:30
-          const hour = 7;
-          const minute = Math.floor(Math.random() * 31);
-          timeIn = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        } else if (randomFactor < 0.93) {
-          status = 'Terlambat';
-          // Late arrival time between 07:31-08:30
-          const hour = Math.random() < 0.7 ? 7 : 8;
-          const minute = hour === 7 ? Math.floor(Math.random() * 29) + 31 : Math.floor(Math.random() * 31);
-          timeIn = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-          notes = 'Terlambat datang ke sekolah';
-        } else if (randomFactor < 0.98) {
-          status = 'Tidak Hadir';
-          notes = 'Tidak hadir tanpa keterangan';
-        } else {
-          status = 'Izin';
-          const excuses = ['Sakit', 'Keperluan keluarga', 'Acara keluarga', 'Kontrol dokter'];
-          notes = excuses[Math.floor(Math.random() * excuses.length)];
-        }
-        
-        // Determine who recorded (teacher for that class)
-        const teacherNames = {
-          '1A': 'Ibu Sari Dewi, S.Pd',
-          '1B': 'Ibu Rina Marlina, S.Pd',
-          '2A': 'Bapak Agus Salim, S.Pd',
-          '2B': 'Ibu Wulan Dari, S.Pd',
-          '3A': 'Ibu Sinta Bella, S.Pd',
-          '3B': 'Bapak Doni Saputra, S.Pd',
-          '4A': 'Ibu Mega Wati, S.Pd',
-          '4B': 'Bapak Rian Hidayat, S.Pd',
-          '5A': 'Ibu Tari Sari, S.Pd',
-          '5B': 'Bapak Vino Mahendra, S.Pd',
-          '6A': 'Ibu Yuni Astuti, S.Pd',
-          '6B': 'Bapak Zaki Maulana, S.Pd'
-        };
-        
-        records.push({
-          id: `att-${recordId.toString().padStart(6, '0')}`,
-          studentId: student.id,
-          studentName: student.name,
-          className: student.className,
-          date: dateString,
-          status,
-          timeIn,
-          notes,
-          recordedBy: teacherNames[student.className as keyof typeof teacherNames],
-          recordedAt: `${dateString}T08:00:00.000Z`
-        });
-        
-        recordId++;
-      });
-    }
-    
-    // Move to next day
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-  
-  return records;
-};
+// Load attendance data from JSON file
+const loadedData = attendanceDataJSON as AttendanceDataStructure;
 
-// Generate the attendance data
-export const attendanceData: AttendanceRecord[] = generateAttendanceData();
+// Export the attendance records from JSON
+export const attendanceData: AttendanceRecord[] = loadedData.attendanceRecords;
+
+// Export metadata and other data
+export const attendanceMetadata = loadedData.metadata;
+export const studentsData = loadedData.students;
+export const teachersData = loadedData.teachers;
+export const excuseReasonsData = loadedData.excuseReasons;
 
 // Helper functions for data access
 export const getAttendanceByDate = (date: string): AttendanceRecord[] => {
@@ -226,6 +148,7 @@ export const getAttendanceSummaryByClass = (className: string, startDate: string
   };
 };
 
-console.log(`Generated ${attendanceData.length} attendance records from December 2024 to January 2025`);
+console.log(`Loaded ${attendanceData.length} attendance records from JSON data`);
+console.log(`Date range: ${attendanceMetadata.dateRange.start} to ${attendanceMetadata.dateRange.end}`);
 console.log(`Available dates: ${getAvailableDates().length} school days`);
-console.log(`Classes covered: 12 classes with 36 students each`);
+console.log(`Classes covered: ${attendanceMetadata.classes.length} classes with ${attendanceMetadata.studentsPerClass} students each`);
