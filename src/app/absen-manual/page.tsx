@@ -6,6 +6,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link';
 import { Student, getStudentsByClass } from '@/data/studentsData';
+import {
+  getAttendanceByClassAndDate,
+  AttendanceRecord,
+  AttendanceStatus,
+  getAvailableDates
+} from '@/data/attendanceData';
 
 
 
@@ -13,24 +19,54 @@ export default function ManualAttendancePage() {
   const { user, teacher, admin, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useAuth();
   const router = useRouter();
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedClass, setSelectedClass] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
-  // Load students for teacher's class or all students for admin
+  // Initialize default values
   useEffect(() => {
     if (hasTeacherAccess && teacher?.className) {
-      const classStudents = getStudentsByClass(teacher.className);
-      setStudents(classStudents);
+      setSelectedClass(teacher.className);
     } else if (hasAdminAccess) {
-      // Admin can see all students - for now, show first class as example
-      // In a real app, admin would select which class to manage
-      const allStudents = getStudentsByClass('1A'); // Default to first class
-      setStudents(allStudents);
+      setSelectedClass('1A'); // Default to first class for admin
     }
+
+    // Set default date to latest available date
+    const availableDates = getAvailableDates();
+    const latestDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] : new Date().toISOString().split('T')[0];
+    setSelectedDate(latestDate);
   }, [teacher, admin, hasTeacherAccess, hasAdminAccess]);
+
+  // Load students and attendance data when class or date changes
+  useEffect(() => {
+    if (selectedClass && selectedDate) {
+      loadAttendanceData();
+    }
+  }, [selectedClass, selectedDate]);
+
+  const loadAttendanceData = () => {
+    // Get students for the selected class
+    const classStudents = getStudentsByClass(selectedClass);
+
+    // Get attendance records for this class and date
+    const attendanceRecords = getAttendanceByClassAndDate(selectedClass, selectedDate);
+
+    // Merge student data with attendance data
+    const studentsWithAttendance = classStudents.map(student => {
+      const attendanceRecord = attendanceRecords.find(record => record.studentName === student.name);
+      return {
+        ...student,
+        status: attendanceRecord?.status || 'Hadir' as AttendanceStatus,
+        timeIn: attendanceRecord?.timeIn,
+        notes: attendanceRecord?.notes
+      };
+    });
+
+    setStudents(studentsWithAttendance);
+  };
 
   const handleStatusChange = (studentId: string, newStatus: Student['status']) => {
     setStudents(prev => prev.map(student => {
@@ -184,7 +220,7 @@ export default function ManualAttendancePage() {
                 </Link>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Absen Manual - SD
+                    Absen Manual - Kelas {selectedClass}
                   </h1>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     {admin ? `Admin - ${admin.name}` : teacher ? `Kelas ${teacher.className} - ${teacher.name}` : 'Loading...'}
@@ -192,6 +228,26 @@ export default function ManualAttendancePage() {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
+                {hasAdminAccess && (
+                  <select
+                    value={selectedClass}
+                    onChange={(e) => setSelectedClass(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                  >
+                    <option value="1A">Kelas 1A</option>
+                    <option value="1B">Kelas 1B</option>
+                    <option value="2A">Kelas 2A</option>
+                    <option value="2B">Kelas 2B</option>
+                    <option value="3A">Kelas 3A</option>
+                    <option value="3B">Kelas 3B</option>
+                    <option value="4A">Kelas 4A</option>
+                    <option value="4B">Kelas 4B</option>
+                    <option value="5A">Kelas 5A</option>
+                    <option value="5B">Kelas 5B</option>
+                    <option value="6A">Kelas 6A</option>
+                    <option value="6B">Kelas 6B</option>
+                  </select>
+                )}
                 <input
                   type="date"
                   value={selectedDate}

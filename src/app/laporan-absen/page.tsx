@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAllClasses } from '@/data/classesData';
-import { allStudentsData, getStudentsByClass } from '@/data/studentsData';
+import {
+  getAttendanceByClassAndDateRange,
+  calculateAttendanceStats,
+  getAvailableDates
+} from '@/data/attendanceData';
 
 interface AttendanceReport {
   date: string;
@@ -40,10 +44,11 @@ export default function LaporanAbsenPage() {
       setSelectedClass(teacher.className);
     }
     
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
-    setStartDate(today);
-    setEndDate(today);
+    // Set default date to latest available date from attendance data
+    const availableDates = getAvailableDates();
+    const latestDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] : new Date().toISOString().split('T')[0];
+    setStartDate(latestDate);
+    setEndDate(latestDate);
     
     setLoading(false);
   }, [user, teacher, hasTeacherAccess, router]);
@@ -57,7 +62,7 @@ export default function LaporanAbsenPage() {
 
   const generateReports = () => {
     const classes = getAllClasses();
-    
+
     // Filter classes based on selection and user role
     let targetClasses = classes;
     if (hasTeacherAccess && teacher?.className) {
@@ -66,28 +71,45 @@ export default function LaporanAbsenPage() {
       targetClasses = classes.filter(cls => cls.name === selectedClass);
     }
 
-    // Generate reports for each class
+    // Determine date range based on selection
+    let reportStartDate = startDate;
+    let reportEndDate = endDate;
+
+    if (selectedDateRange === 'today') {
+      const today = new Date().toISOString().split('T')[0];
+      reportStartDate = today;
+      reportEndDate = today;
+    } else if (selectedDateRange === 'week') {
+      const today = new Date();
+      const weekStart = new Date(today.setDate(today.getDate() - today.getDay() + 1));
+      const weekEnd = new Date(today.setDate(today.getDate() - today.getDay() + 5));
+      reportStartDate = weekStart.toISOString().split('T')[0];
+      reportEndDate = weekEnd.toISOString().split('T')[0];
+    } else if (selectedDateRange === 'month') {
+      const today = new Date();
+      const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const monthEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      reportStartDate = monthStart.toISOString().split('T')[0];
+      reportEndDate = monthEnd.toISOString().split('T')[0];
+    }
+
+    // Generate reports for each class using centralized attendance data
     const generatedReports: AttendanceReport[] = targetClasses.map(cls => {
-      const classStudents = getStudentsByClass(cls.name);
-      const totalStudents = classStudents.length;
-      
-      // Count attendance status
-      const present = classStudents.filter(s => s.status === 'Hadir').length;
-      const late = classStudents.filter(s => s.status === 'Terlambat').length;
-      const absent = classStudents.filter(s => s.status === 'Tidak Hadir').length;
-      const excused = classStudents.filter(s => s.status === 'Izin').length;
-      
-      const attendanceRate = totalStudents > 0 ? ((present + late) / totalStudents) * 100 : 0;
+      // Get attendance data for this class and date range
+      const attendanceRecords = getAttendanceByClassAndDateRange(cls.name, reportStartDate, reportEndDate);
+
+      // Calculate statistics using the helper function
+      const stats = calculateAttendanceStats(attendanceRecords);
 
       return {
-        date: '2025-01-21', // Current date from sample data
+        date: reportStartDate === reportEndDate ? reportStartDate : `${reportStartDate} - ${reportEndDate}`,
         className: cls.name,
-        totalStudents,
-        present,
-        late,
-        absent,
-        excused,
-        attendanceRate: Math.round(attendanceRate * 100) / 100
+        totalStudents: stats.total,
+        present: stats.present,
+        late: stats.late,
+        absent: stats.absent,
+        excused: stats.excused,
+        attendanceRate: stats.attendanceRate
       };
     });
 
