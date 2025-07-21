@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { validateTeacherCredentials, getAllTeachers } from '@/data/classesData';
+import { getAllTeachers, getAllAdmins } from '@/data/classesData';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -43,12 +43,9 @@ export default function LoginPage() {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Check credentials using centralized validation
-    const teacher = validateTeacherCredentials(formData.username, formData.password);
+    const loginSuccess = login(formData.username, formData.password);
 
-    if (teacher) {
-      // Use AuthContext to login
-      login(teacher);
-
+    if (loginSuccess) {
       // Redirect to dashboard
       router.push('/dashboard');
     } else {
@@ -69,7 +66,7 @@ export default function LoginPage() {
             </h1>
           </Link>
           <p className="text-gray-600 dark:text-gray-300">
-            Portal Login Guru Kelas SD
+            Portal Login Admin & Guru Kelas SD
           </p>
         </div>
 
@@ -163,14 +160,26 @@ export default function LoginPage() {
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Demo Akun Admin (Tata Usaha):
+            </h3>
+            <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1 mb-4">
+              {getAllAdmins().map((admin) => (
+                <p key={admin.id}>
+                  <strong>Username:</strong> {admin.username} | <strong>Password:</strong> {admin.password} | <strong>Jabatan:</strong> {admin.position}
+                </p>
+              ))}
+            </div>
+
+            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Demo Akun Guru Kelas SD:
             </h3>
             <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-              {getAllTeachers().map((teacher) => (
+              {getAllTeachers().slice(0, 4).map((teacher) => (
                 <p key={teacher.id}>
                   <strong>Username:</strong> {teacher.username} | <strong>Password:</strong> {teacher.password} | <strong>Kelas:</strong> {teacher.className}
                 </p>
               ))}
+              <p className="text-gray-500 italic">... dan 8 akun guru lainnya</p>
             </div>
           </div>
 

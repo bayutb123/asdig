@@ -30,7 +30,22 @@ export interface Teacher {
   subject?: string;
   phone?: string;
   email?: string;
+  role: 'teacher';
 }
+
+export interface Admin {
+  id: string;
+  name: string;
+  nip: string;
+  username: string;
+  password: string;
+  position: string;
+  phone?: string;
+  email?: string;
+  role: 'admin';
+}
+
+export type User = Teacher | Admin;
 
 // Centralized classes data - Elementary School (Sekolah Dasar)
 export const classesData: ClassInfo[] = [
@@ -294,7 +309,8 @@ export const teachersData: Teacher[] = [
     className: '1A',
     subject: 'Guru Kelas',
     phone: '081234567890',
-    email: 'sari.dewi@sd.sch.id'
+    email: 'sari.dewi@sd.sch.id',
+    role: 'teacher'
   },
   {
     id: 'teacher-002',
@@ -306,7 +322,8 @@ export const teachersData: Teacher[] = [
     className: '1B',
     subject: 'Guru Kelas',
     phone: '081234567891',
-    email: 'maya.sari@sd.sch.id'
+    email: 'maya.sari@sd.sch.id',
+    role: 'teacher'
   },
   {
     id: 'teacher-003',
@@ -318,7 +335,8 @@ export const teachersData: Teacher[] = [
     className: '2A',
     subject: 'Guru Kelas',
     phone: '081234567892',
-    email: 'ahmad.wijaya@sd.sch.id'
+    email: 'ahmad.wijaya@sd.sch.id',
+    role: 'teacher'
   },
   {
     id: 'teacher-004',
@@ -330,7 +348,8 @@ export const teachersData: Teacher[] = [
     className: '2B',
     subject: 'Guru Kelas',
     phone: '081234567893',
-    email: 'rina.maharani@sd.sch.id'
+    email: 'rina.maharani@sd.sch.id',
+    role: 'teacher'
   },
   {
     id: 'teacher-005',
@@ -342,7 +361,8 @@ export const teachersData: Teacher[] = [
     className: '3A',
     subject: 'Guru Kelas',
     phone: '081234567894',
-    email: 'dedi.kurniawan@sd.sch.id'
+    email: 'dedi.kurniawan@sd.sch.id',
+    role: 'teacher'
   },
   {
     id: 'teacher-006',
@@ -354,7 +374,8 @@ export const teachersData: Teacher[] = [
     className: '3B',
     subject: 'Guru Kelas',
     phone: '081234567895',
-    email: 'indira.putri@sd.sch.id'
+    email: 'indira.putri@sd.sch.id',
+    role: 'teacher'
   },
   {
     id: 'teacher-007',
@@ -366,7 +387,8 @@ export const teachersData: Teacher[] = [
     className: '4A',
     subject: 'Guru Kelas',
     phone: '081234567896',
-    email: 'galih.pratama@sd.sch.id'
+    email: 'galih.pratama@sd.sch.id',
+    role: 'teacher'
   },
   {
     id: 'teacher-008',
@@ -378,7 +400,8 @@ export const teachersData: Teacher[] = [
     className: '4B',
     subject: 'Guru Kelas',
     phone: '081234567897',
-    email: 'anisa.rahma@sd.sch.id'
+    email: 'anisa.rahma@sd.sch.id',
+    role: 'teacher'
   },
   {
     id: 'teacher-009',
@@ -390,7 +413,8 @@ export const teachersData: Teacher[] = [
     className: '5A',
     subject: 'Guru Kelas',
     phone: '081234567898',
-    email: 'sari.wulandari@sd.sch.id'
+    email: 'sari.wulandari@sd.sch.id',
+    role: 'teacher'
   },
   {
     id: 'teacher-010',
@@ -402,7 +426,8 @@ export const teachersData: Teacher[] = [
     className: '5B',
     subject: 'Guru Kelas',
     phone: '081234567899',
-    email: 'eko.prasetyo@sd.sch.id'
+    email: 'eko.prasetyo@sd.sch.id',
+    role: 'teacher'
   },
   {
     id: 'teacher-011',
@@ -414,7 +439,8 @@ export const teachersData: Teacher[] = [
     className: '6A',
     subject: 'Guru Kelas',
     phone: '081234567900',
-    email: 'dewi.lestari@sd.sch.id'
+    email: 'dewi.lestari@sd.sch.id',
+    role: 'teacher'
   },
   {
     id: 'teacher-012',
@@ -426,9 +452,50 @@ export const teachersData: Teacher[] = [
     className: '6B',
     subject: 'Guru Kelas',
     phone: '081234567901',
-    email: 'hendra.wijaya@sd.sch.id'
+    email: 'hendra.wijaya@sd.sch.id',
+    role: 'teacher'
   }
 ];
+
+// Centralized admin data - Tata Usaha
+export const adminsData: Admin[] = [
+  {
+    id: 'admin-001',
+    name: 'Ibu Siti Rahayu, S.Pd',
+    nip: '197508121998032001',
+    username: 'admin',
+    password: 'admin123',
+    position: 'Kepala Tata Usaha',
+    phone: '081234567800',
+    email: 'admin@sd.sch.id',
+    role: 'admin'
+  },
+  {
+    id: 'admin-002',
+    name: 'Bapak Agus Santoso, S.Kom',
+    nip: '198203151999031002',
+    username: 'tatausaha',
+    password: 'tatausaha123',
+    position: 'Staff Tata Usaha',
+    phone: '081234567801',
+    email: 'tatausaha@sd.sch.id',
+    role: 'admin'
+  },
+  {
+    id: 'admin-003',
+    name: 'Ibu Dewi Kartika, S.E',
+    nip: '198905201999032003',
+    username: 'keuangan',
+    password: 'keuangan123',
+    position: 'Staff Keuangan',
+    phone: '081234567802',
+    email: 'keuangan@sd.sch.id',
+    role: 'admin'
+  }
+];
+
+// Combined users data
+export const allUsersData: User[] = [...teachersData, ...adminsData];
 
 // Helper functions for class management
 export const getClassById = (classId: string): ClassInfo | undefined => {
@@ -503,10 +570,63 @@ export const validateTeacherCredentials = (username: string, password: string): 
   return null;
 };
 
+export const validateAdminCredentials = (username: string, password: string): Admin | null => {
+  const admin = adminsData.find(admin => admin.username === username);
+  if (admin && admin.password === password) {
+    return admin;
+  }
+  return null;
+};
+
+export const validateUserCredentials = (username: string, password: string): User | null => {
+  // Try teacher first
+  const teacher = validateTeacherCredentials(username, password);
+  if (teacher) return teacher;
+
+  // Try admin
+  const admin = validateAdminCredentials(username, password);
+  if (admin) return admin;
+
+  return null;
+};
+
 export const isValidClassName = (className: string): boolean => {
   return classesData.some(cls => cls.name === className);
 };
 
 export const isValidTeacherId = (teacherId: string): boolean => {
   return teachersData.some(teacher => teacher.id === teacherId);
+};
+
+// Admin helper functions
+export const getAllAdmins = (): Admin[] => {
+  return adminsData;
+};
+
+export const getAdminById = (adminId: string): Admin | undefined => {
+  return adminsData.find(admin => admin.id === adminId);
+};
+
+export const getAdminByUsername = (username: string): Admin | undefined => {
+  return adminsData.find(admin => admin.username === username);
+};
+
+export const getAllUsers = (): User[] => {
+  return allUsersData;
+};
+
+export const getUserById = (userId: string): User | undefined => {
+  return allUsersData.find(user => user.id === userId);
+};
+
+export const getUserByUsername = (username: string): User | undefined => {
+  return allUsersData.find(user => user.username === username);
+};
+
+export const isAdmin = (user: User): user is Admin => {
+  return user.role === 'admin';
+};
+
+export const isTeacher = (user: User): user is Teacher => {
+  return user.role === 'teacher';
 };

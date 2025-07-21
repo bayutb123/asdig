@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useClass } from '@/contexts/ClassContext';
 
 export default function KelolaKelasPage() {
-  const { teacher } = useAuth();
+  const { user, admin, hasAdminAccess } = useAuth();
   const router = useRouter();
   const { classes, teachers, addNewClass, deleteClass } = useClass();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -25,15 +25,20 @@ export default function KelolaKelasPage() {
     maxStudents: 36
   });
 
-  // Check authentication
+  // Check authentication and admin access
   useEffect(() => {
-    if (!teacher) {
+    if (!user) {
       router.push('/login');
       return;
     }
 
+    if (!hasAdminAccess) {
+      router.push('/dashboard');
+      return;
+    }
+
     setLoading(false);
-  }, [teacher, router]);
+  }, [user, hasAdminAccess, router]);
 
   const handleAddClass = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +107,32 @@ export default function KelolaKelasPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasAdminAccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4">
+            <svg className="h-16 w-16 text-red-500 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Akses Ditolak
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            Hanya admin (tata usaha) yang dapat mengakses halaman ini.
+          </p>
+          <Link
+            href="/dashboard"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+          >
+            Kembali ke Dashboard
+          </Link>
         </div>
       </div>
     );
