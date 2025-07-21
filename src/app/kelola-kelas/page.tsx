@@ -25,20 +25,15 @@ export default function KelolaKelasPage() {
     maxStudents: 36
   });
 
-  // Check authentication and admin access
+  // Check authentication
   useEffect(() => {
     if (!user) {
       router.push('/login');
       return;
     }
 
-    if (!hasAdminAccess) {
-      router.push('/dashboard');
-      return;
-    }
-
     setLoading(false);
-  }, [user, hasAdminAccess, router]);
+  }, [user, router]);
 
   const handleAddClass = (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +95,35 @@ export default function KelolaKelasPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user has admin access - Teachers cannot access this page
+  if (!hasAdminAccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-md">
+            <div className="text-red-600 dark:text-red-400 mb-4">
+              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              Akses Ditolak
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Hanya admin yang memiliki hak untuk mengelola kelas. Guru tidak diizinkan mengakses halaman ini.
+            </p>
+            <Link
+              href="/dashboard"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+            >
+              Kembali ke Dashboard
+            </Link>
+          </div>
         </div>
       </div>
     );

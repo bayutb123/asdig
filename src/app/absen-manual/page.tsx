@@ -26,19 +26,17 @@ export default function ManualAttendancePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
-  // Initialize default values
+  // Initialize default values - Only for teachers
   useEffect(() => {
     if (hasTeacherAccess && teacher?.className) {
       setSelectedClass(teacher.className);
-    } else if (hasAdminAccess) {
-      setSelectedClass('1A'); // Default to first class for admin
-    }
 
-    // Set default date to latest available date
-    const availableDates = getAvailableDates();
-    const latestDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] : new Date().toISOString().split('T')[0];
-    setSelectedDate(latestDate);
-  }, [teacher, admin, hasTeacherAccess, hasAdminAccess]);
+      // Set default date to latest available date
+      const availableDates = getAvailableDates();
+      const latestDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] : new Date().toISOString().split('T')[0];
+      setSelectedDate(latestDate);
+    }
+  }, [teacher, hasTeacherAccess]);
 
   // Load students and attendance data when class or date changes
   useEffect(() => {
@@ -188,14 +186,45 @@ export default function ManualAttendancePage() {
     excused: students.filter(s => s.status === 'Izin').length
   };
 
-  // Show loading if auth is still loading or teacher data is not available
-  if (isLoading || !teacher) {
+  // Check if user has teacher access - Admin cannot access this page
+  if (isLoading) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600 dark:text-gray-300">Memuat data absensi...</p>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
+
+  // Redirect admin users - they don't have access to input attendance
+  if (admin || !hasTeacherAccess || !teacher) {
+    return (
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+          <div className="text-center">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-md">
+              <div className="text-red-600 dark:text-red-400 mb-4">
+                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                Akses Ditolak
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                Hanya guru yang memiliki hak untuk menginput absensi siswa. Admin tidak diizinkan mengakses halaman ini.
+              </p>
+              <Link
+                href="/dashboard"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+              >
+                Kembali ke Dashboard
+              </Link>
+            </div>
           </div>
         </div>
       </ProtectedRoute>
@@ -223,31 +252,11 @@ export default function ManualAttendancePage() {
                     Absen Manual - Kelas {selectedClass}
                   </h1>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {admin ? `Admin - ${admin.name}` : teacher ? `Kelas ${teacher.className} - ${teacher.name}` : 'Loading...'}
+                    Kelas {teacher.className} - {teacher.name}
                   </p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                {hasAdminAccess && (
-                  <select
-                    value={selectedClass}
-                    onChange={(e) => setSelectedClass(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
-                  >
-                    <option value="1A">Kelas 1A</option>
-                    <option value="1B">Kelas 1B</option>
-                    <option value="2A">Kelas 2A</option>
-                    <option value="2B">Kelas 2B</option>
-                    <option value="3A">Kelas 3A</option>
-                    <option value="3B">Kelas 3B</option>
-                    <option value="4A">Kelas 4A</option>
-                    <option value="4B">Kelas 4B</option>
-                    <option value="5A">Kelas 5A</option>
-                    <option value="5B">Kelas 5B</option>
-                    <option value="6A">Kelas 6A</option>
-                    <option value="6B">Kelas 6B</option>
-                  </select>
-                )}
                 <input
                   type="date"
                   value={selectedDate}
