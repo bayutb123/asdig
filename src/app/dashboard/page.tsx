@@ -118,7 +118,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className={`grid grid-cols-1 gap-4 mb-8 ${hasAdminAccess ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
           <Link
             href="/absen-manual"
             className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow text-center block"
