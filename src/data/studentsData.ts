@@ -62,9 +62,11 @@ export const getStudentsCountByClass = (className: string): number => {
   return getStudentsByClass(className).length;
 };
 
-console.log(`Loaded ${allStudentsData.length} students from JSON data`);
-console.log(`Classes: ${getAllClasses().join(', ')}`);
-console.log(`Students per class: ${studentsMetadata.studentsPerClass}`);
+if (process.env.NODE_ENV === 'development') {
+  console.log(`Loaded ${allStudentsData.length} students from JSON data`);
+  console.log(`Classes: ${getAllClasses().join(', ')}`);
+  console.log(`Students per class: ${studentsMetadata.studentsPerClass}`);
+}
 
 // Helper function to get class statistics
 export const getClassStatistics = (className: string) => {
