@@ -316,14 +316,19 @@ export default function KelolaKelasPage() {
               
               <form onSubmit={handleAddClass} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label
+                    htmlFor="class-level-select"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     Tingkat Kelas
                   </label>
                   <select
+                    id="class-level-select"
                     value={newClass.level}
                     onChange={(e) => setNewClass({...newClass, level: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     required
+                    aria-label="Pilih tingkat kelas"
                   >
                     <option value="">Pilih Tingkat</option>
                     <option value="1">Kelas 1</option>
@@ -344,14 +349,19 @@ export default function KelolaKelasPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label
+                    htmlFor="class-section-select"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     Bagian
                   </label>
                   <select
+                    id="class-section-select"
                     value={newClass.section}
                     onChange={(e) => setNewClass({...newClass, section: e.target.value as 'A' | 'B'})}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                     required
+                    aria-label="Pilih bagian kelas (A atau B)"
                   >
                     <option value="A">A</option>
                     <option value="B">B</option>

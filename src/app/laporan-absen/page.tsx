@@ -473,13 +473,18 @@ export default function LaporanAbsenPage() {
             {/* Class Filter - Only show for admin */}
             {hasAdminAccess && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label
+                  htmlFor="class-filter-select"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   Kelas
                 </label>
                 <select
+                  id="class-filter-select"
                   value={selectedClass}
                   onChange={(e) => setSelectedClass(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  aria-label="Filter laporan berdasarkan kelas"
                 >
                   <option value="all">Semua Kelas</option>
                   {getAllClasses().map(cls => (

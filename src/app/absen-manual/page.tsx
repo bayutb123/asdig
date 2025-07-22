@@ -256,12 +256,22 @@ export default function ManualAttendancePage() {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
-                />
+                <div>
+                  <label
+                    htmlFor="attendance-date-input"
+                    className="sr-only"
+                  >
+                    Pilih tanggal absensi
+                  </label>
+                  <input
+                    id="attendance-date-input"
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                    aria-label="Pilih tanggal absensi"
+                  />
+                </div>
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
