@@ -114,6 +114,8 @@ export const validateUserCredentials = (username: string, password: string): Use
 export const isAdmin = (user: User): user is Admin => user.role === 'admin';
 export const isTeacher = (user: User): user is Teacher => user.role === 'teacher';
 
-console.log(`Loaded ${classesData.length} classes from JSON data`);
-console.log(`Loaded ${teachersData.length} teachers from JSON data`);
-console.log(`Loaded ${adminsData.length} admins from JSON data`);
+if (process.env.NODE_ENV === 'development') {
+  console.log(`Loaded ${classesData.length} classes from JSON data`);
+  console.log(`Loaded ${teachersData.length} teachers from JSON data`);
+  console.log(`Loaded ${adminsData.length} admins from JSON data`);
+}
