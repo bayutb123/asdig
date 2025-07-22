@@ -188,7 +188,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Attendance Table */}
-        <AttendanceTable />
+        <AttendanceTable headingLevel="h2" />
       </main>
       </StableContainer>
     </ProtectedRoute>

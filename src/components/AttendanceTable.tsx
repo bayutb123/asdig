@@ -6,10 +6,21 @@ import { LoadingPlaceholder } from './LayoutStable';
 import {allStudentsData, getStudentsByClass, Student} from '@/data/studentsData';
 import {getAttendanceByClassAndDate} from '@/data/attendanceData';
 
-export default function AttendanceTable() {
+interface AttendanceTableProps {
+  headingLevel?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+}
+
+export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTableProps) {
   const { teacher } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Dynamic heading components for proper hierarchy
+  const FilterHeadingComponent = headingLevel;
+  const TableHeadingComponent = headingLevel === 'h1' ? 'h2' :
+                               headingLevel === 'h2' ? 'h3' :
+                               headingLevel === 'h3' ? 'h4' :
+                               headingLevel === 'h4' ? 'h5' : 'h6';
   const [editingStudent, setEditingStudent] = useState<string | null>(null);
   const [tempStatus, setTempStatus] = useState<Student['status']>('Hadir');
   const [tempCheckInTime, setTempCheckInTime] = useState<string>('');
@@ -206,7 +217,9 @@ export default function AttendanceTable() {
       {/* Filter untuk public view */}
       {!teacher && (
         <div className="mb-6 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-3">Filter & Cari Data Absensi</h3>
+          <FilterHeadingComponent className="text-lg font-medium text-gray-900 dark:text-white mb-3">
+            Filter & Cari Data Absensi
+          </FilterHeadingComponent>
 
           {/* Search Input */}
           <div className="mb-4">
@@ -264,14 +277,14 @@ export default function AttendanceTable() {
       {/* Header Tabel */}
       <div className="mb-4 flex justify-between items-center">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <TableHeadingComponent className="text-xl font-semibold text-gray-900 dark:text-white">
             Absensi Siswa - {new Date().toLocaleDateString('id-ID', {
               weekday: 'long',
               year: 'numeric',
               month: 'long',
               day: 'numeric'
             })}
-          </h2>
+          </TableHeadingComponent>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             {teacher
               ? `Menampilkan ${students.length} siswa kelas ${teacher.className}`
