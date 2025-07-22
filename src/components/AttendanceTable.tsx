@@ -2,12 +2,14 @@
 
 import {useEffect, useState} from 'react';
 import {useAuth} from '@/contexts/AuthContext';
+import { LoadingPlaceholder } from './LayoutStable';
 import {allStudentsData, getStudentsByClass, Student} from '@/data/studentsData';
 import {getAttendanceByClassAndDate} from '@/data/attendanceData';
 
 export default function AttendanceTable() {
   const { teacher } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [editingStudent, setEditingStudent] = useState<string | null>(null);
   const [tempStatus, setTempStatus] = useState<Student['status']>('Hadir');
   const [tempCheckInTime, setTempCheckInTime] = useState<string>('');
@@ -48,6 +50,7 @@ export default function AttendanceTable() {
       });
 
       setStudents(studentsWithAttendance);
+      setLoading(false);
     };
 
     loadStudentsWithAttendance();
@@ -163,8 +166,17 @@ export default function AttendanceTable() {
     excused: students.filter(s => s.status === 'Izin').length
   };
 
+  // Show loading state to prevent layout shifts
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 prevent-layout-shift" style={{ minHeight: '400px' }}>
+        <LoadingPlaceholder message="Memuat data kehadiran..." height="400px" />
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 prevent-layout-shift">
       {/* Kartu Statistik */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg text-center">

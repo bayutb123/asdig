@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AttendanceTable from '@/components/AttendanceTable';
+import { StableContainer, LoadingPlaceholder } from '@/components/LayoutStable';
 import Link from 'next/link';
 
 export default function DashboardPage() {
@@ -27,19 +28,20 @@ export default function DashboardPage() {
   if (isLoading || (!teacher && !admin)) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-300">Memuat dashboard...</p>
-          </div>
-        </div>
+        <StableContainer className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+          <LoadingPlaceholder
+            message="Memuat dashboard..."
+            height="100vh"
+            className="flex items-center justify-center"
+          />
+        </StableContainer>
       </ProtectedRoute>
     );
   }
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <StableContainer className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="container mx-auto px-4 py-4">
@@ -76,7 +78,7 @@ export default function DashboardPage() {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 prevent-layout-shift" style={{ minHeight: '60vh' }}>
         {/* Class Info Card */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
           <div className="flex items-center justify-between">
@@ -188,7 +190,7 @@ export default function DashboardPage() {
         {/* Attendance Table */}
         <AttendanceTable />
       </main>
-      </div>
+      </StableContainer>
     </ProtectedRoute>
   );
 }

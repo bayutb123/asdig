@@ -54,6 +54,7 @@ const config: Config = {
         'fade-in': 'fadeIn 0.5s ease-in-out',
         'slide-up': 'slideUp 0.3s ease-out',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'skeleton': 'skeleton 1.5s ease-in-out infinite alternate',
       },
       keyframes: {
         fadeIn: {
@@ -63,6 +64,10 @@ const config: Config = {
         slideUp: {
           '0%': { transform: 'translateY(10px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        skeleton: {
+          '0%': { backgroundColor: 'rgb(229, 231, 235)' },
+          '100%': { backgroundColor: 'rgb(243, 244, 246)' },
         },
       },
       screens: {
@@ -108,6 +113,37 @@ const config: Config = {
         },
         '.dark .status-excused': {
           '@apply bg-blue-900/20 text-blue-400 border-blue-800': {},
+        },
+        // Layout shift prevention utilities
+        '.prevent-layout-shift': {
+          'min-height': '1px',
+          'contain': 'layout style',
+        },
+        '.skeleton': {
+          '@apply animate-skeleton bg-gray-200 rounded': {},
+        },
+        '.skeleton-text': {
+          '@apply skeleton h-4 w-full mb-2': {},
+        },
+        '.skeleton-title': {
+          '@apply skeleton h-6 w-3/4 mb-4': {},
+        },
+        '.skeleton-button': {
+          '@apply skeleton h-10 w-24 rounded-md': {},
+        },
+        '.stable-container': {
+          'min-height': '100vh',
+          'contain': 'layout',
+        },
+        '.stable-grid': {
+          'grid-template-rows': 'auto 1fr auto',
+          'min-height': '100vh',
+        },
+        '.loading-placeholder': {
+          'min-height': '200px',
+          'display': 'flex',
+          'align-items': 'center',
+          'justify-content': 'center',
         },
       });
     }),
