@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useClass } from '@/contexts/ClassContext';
 
 export default function KelolaKelasPage() {
-  const { user, admin, hasAdminAccess } = useAuth();
+  const { user, hasAdminAccess } = useAuth();
   const router = useRouter();
   const { classes, teachers, addNewClass, deleteClass } = useClass();
   const [showAddForm, setShowAddForm] = useState(false);

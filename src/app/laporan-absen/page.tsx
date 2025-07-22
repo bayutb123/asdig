@@ -7,7 +7,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getAllClasses } from '@/data/classesData';
 import {
   getAttendanceByClassAndDateRange,
-  calculateAttendanceStats,
   calculateClassAttendanceStats,
   getAvailableDates
 } from '@/data/attendanceData';

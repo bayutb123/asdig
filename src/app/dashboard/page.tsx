@@ -7,7 +7,7 @@ import AttendanceTable from '@/components/AttendanceTable';
 import Link from 'next/link';
 
 export default function DashboardPage() {
-  const { user, teacher, admin, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useAuth();
+  const { teacher, admin, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useAuth();
   const router = useRouter();
 
   const handleLogout = () => {

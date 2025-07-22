@@ -53,7 +53,7 @@ export function ClassProvider({ children }: ClassProviderProps) {
       ...teacherData,
       id: newTeacherId,
       classId: newClassId,
-      username: `walikelas${classData.level.toLowerCase()}${classData.section.toLowerCase()}`,
+      username: `walikelas${classData.grade}${classData.section.toLowerCase()}`,
       password: 'password123',
       subject: 'Guru Kelas',
     };

@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { Student, getStudentsByClass } from '@/data/studentsData';
 import {
   getAttendanceByClassAndDate,
-  AttendanceRecord,
   AttendanceStatus,
   getAvailableDates
 } from '@/data/attendanceData';
@@ -16,8 +15,7 @@ import {
 
 
 export default function ManualAttendancePage() {
-  const { user, teacher, admin, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useAuth();
-  const router = useRouter();
+  const { teacher, admin, isLoading, hasTeacherAccess } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedClass, setSelectedClass] = useState('');

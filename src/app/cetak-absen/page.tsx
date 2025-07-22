@@ -6,10 +6,9 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getStudentsByClass } from '@/data/studentsData';
-import { 
-  getAttendanceByClassAndDateRange, 
-  getAvailableDates,
-  AttendanceRecord 
+import {
+  getAttendanceByClassAndDateRange,
+  getAvailableDates
 } from '@/data/attendanceData';
 
 interface StudentAttendanceData {
@@ -24,8 +23,7 @@ interface StudentAttendanceData {
 }
 
 export default function CetakAbsenPage() {
-  const { user, teacher, admin, hasTeacherAccess } = useAuth();
-  const router = useRouter();
+  const { teacher, admin, hasTeacherAccess } = useAuth();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(true);
@@ -69,7 +67,11 @@ export default function CetakAbsenPage() {
     
     // Process data for each student
     const processedData: StudentAttendanceData[] = classStudents.map(student => {
-      const attendanceByDate: Record<string, any> = {};
+      const attendanceByDate: Record<string, {
+        status: string;
+        timeIn?: string;
+        notes?: string;
+      }> = {};
       
       dates.forEach(date => {
         const record = attendanceRecords.find(r => 
