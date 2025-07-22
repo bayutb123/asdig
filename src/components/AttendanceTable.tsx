@@ -243,13 +243,18 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
           {/* Filter Dropdowns */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="filter-class-select"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Filter berdasarkan Kelas
               </label>
               <select
+                id="filter-class-select"
                 value={filterClass}
                 onChange={(e) => setFilterClass(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                aria-label="Filter berdasarkan Kelas"
               >
                 {availableClasses.map(className => (
                   <option key={className} value={className}>{className}</option>
@@ -257,13 +262,18 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="filter-status-select"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 Filter berdasarkan Status
               </label>
               <select
+                id="filter-status-select"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                aria-label="Filter berdasarkan Status"
               >
                 {availableStatuses.map(status => (
                   <option key={status} value={status}>{status}</option>
@@ -326,16 +336,26 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
                 </td>
                 <td className="py-3 px-4">
                   {teacher && editingStudent === student.id ? (
-                    <select
-                      value={tempStatus}
-                      onChange={(e) => handleStatusChange(e.target.value as Student['status'])}
-                      className="text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-2 py-1"
-                    >
+                    <div>
+                      <label
+                        htmlFor={`status-select-${student.id}`}
+                        className="sr-only"
+                      >
+                        Status kehadiran untuk {student.name}
+                      </label>
+                      <select
+                        id={`status-select-${student.id}`}
+                        value={tempStatus}
+                        onChange={(e) => handleStatusChange(e.target.value as Student['status'])}
+                        className="text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-2 py-1"
+                        aria-label={`Status kehadiran untuk ${student.name}`}
+                      >
                       <option value="Hadir">Hadir</option>
                       <option value="Tidak Hadir">Tidak Hadir</option>
                       <option value="Terlambat">Terlambat</option>
                       <option value="Izin">Izin</option>
                     </select>
+                    </div>
                   ) : (
                     <span className={getStatusBadge(student.status)}>
                       {student.status}
