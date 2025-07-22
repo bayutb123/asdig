@@ -1,92 +1,72 @@
-// Types for student data
+// Student data for all classes in SD
+// Loads student data from JSON file
+
+import studentsDataJSON from './studentsData.json';
+
 export interface Student {
   id: string;
   name: string;
-  studentId: string;
   class: string;
-  status: 'Hadir' | 'Tidak Hadir' | 'Terlambat' | 'Izin';
-  checkInTime?: string;
-  date: string;
-  notes?: string;
+  nisn: string;
+  gender: 'L' | 'P';
+  birthDate: string;
+  address: string;
+  parentName: string;
+  parentPhone: string;
+  status: 'Hadir' | 'Terlambat' | 'Tidak Hadir' | 'Izin';
+  checkInTime?: string; // Optional for manual attendance functionality
+  notes?: string; // Optional for attendance notes
 }
 
-// Indonesian names for generating student data
-const indonesianNames = [
-  'Ahmad Rizki', 'Siti Nurhaliza', 'Andi Pratama', 'Fajar Nugroho', 'Lestari Dewi', 'Bayu Adi',
-  'Budi Santoso', 'Reza Firmansyah', 'Dimas Arya', 'Citra Maharani', 'Galang Pratama', 'Putri Ayu',
-  'Maya Sari', 'Indira Putri', 'Anisa Rahma', 'Galih Pratama', 'Sari Wulandari', 'Eko Prasetyo',
-  'Dewi Lestari', 'Rina Maharani', 'Hendra Wijaya', 'Intan Permata', 'Arif Budiman', 'Novi Rahayu',
-  'Adi Nugroho', 'Sinta Dewi', 'Bagas Pratama', 'Lina Sari', 'Doni Setiawan', 'Eka Putri',
-  'Fandi Wijaya', 'Gita Maharani', 'Hadi Pratama', 'Ira Lestari', 'Joko Santoso', 'Kiki Amelia'
-];
+export interface StudentsDataStructure {
+  metadata: {
+    totalStudents: number;
+    totalClasses: number;
+    studentsPerClass: number;
+    generatedAt: string;
+  };
+  students: Student[];
+}
 
-const checkInTimes = ['07:05', '07:08', '07:10', '07:12', '07:15', '07:18', '07:20', '07:22', '07:25', '07:30', '07:45', '07:50'];
+// Load students data from JSON file
+const loadedData = studentsDataJSON as StudentsDataStructure;
 
-// Function to generate students for a class
-const generateStudentsForClass = (className: string, startId: number): Student[] => {
-  const students: Student[] = [];
+// Export the students data from JSON
+export const allStudentsData: Student[] = loadedData.students;
 
-  for (let i = 0; i < 36; i++) {
-    const id = startId + i;
-    const nameIndex = i % indonesianNames.length;
-    const statusIndex = Math.floor(Math.random() * 10); // 80% chance of being present
-    let status: 'Hadir' | 'Tidak Hadir' | 'Terlambat' | 'Izin';
-
-    if (statusIndex < 7) status = 'Hadir';
-    else if (statusIndex < 8) status = 'Terlambat';
-    else if (statusIndex < 9) status = 'Tidak Hadir';
-    else status = 'Izin';
-
-    const student: Student = {
-      id: id.toString(),
-      name: indonesianNames[nameIndex] + (i >= indonesianNames.length ? ` ${Math.floor(i / indonesianNames.length) + 1}` : ''),
-      studentId: `SD${id.toString().padStart(3, '0')}`,
-      class: className,
-      status: status,
-      date: '2025-01-21'
-    };
-
-    // Add check-in time for present and late students
-    if (status === 'Hadir' || status === 'Terlambat') {
-      const timeIndex = status === 'Terlambat' ?
-        checkInTimes.length - 2 + Math.floor(Math.random() * 2) : // Late times
-        Math.floor(Math.random() * (checkInTimes.length - 2)); // Regular times
-      student.checkInTime = checkInTimes[timeIndex];
-    }
-
-    students.push(student);
-  }
-
-  return students;
-};
-
-// Generate all student data for 12 classes (36 students each = 432 total)
-const generateAllStudents = (): Student[] => {
-  const classes = ['1A', '1B', '2A', '2B', '3A', '3B', '4A', '4B', '5A', '5B', '6A', '6B'];
-  let allStudents: Student[] = [];
-  let currentId = 1;
-
-  classes.forEach(className => {
-    const classStudents = generateStudentsForClass(className, currentId);
-    allStudents = allStudents.concat(classStudents);
-    currentId += 36;
-  });
-
-  return allStudents;
-};
-
-// Centralized student data - Elementary School (Sekolah Dasar) - 36 students per class
-export const allStudentsData: Student[] = generateAllStudents();
-
+// Export metadata
+export const studentsMetadata = loadedData.metadata;
 // Helper function to get students by class
 export const getStudentsByClass = (className: string): Student[] => {
   return allStudentsData.filter(student => student.class === className);
 };
 
-// Helper function to get all unique classes
-export const getAllClasses = (): string[] => {
-  return Array.from(new Set(allStudentsData.map(student => student.class)));
+// Helper function to get student by ID
+export const getStudentById = (id: string): Student | undefined => {
+  return allStudentsData.find(student => student.id === id);
 };
+
+// Helper function to get all classes
+export const getAllClasses = (): string[] => {
+  const classes = [...new Set(allStudentsData.map(student => student.class))];
+  return classes.sort();
+};
+
+// Helper function to get total students count
+export const getTotalStudents = (): number => {
+  return allStudentsData.length;
+};
+
+// Helper function to get students count by class
+export const getStudentsCountByClass = (className: string): number => {
+  return getStudentsByClass(className).length;
+};
+
+if (process.env.NODE_ENV === 'development') {
+  console.log(`Loaded ${allStudentsData.length} students from JSON data`);
+  console.log(`Classes: ${getAllClasses().join(', ')}`);
+  console.log(`Students per class: ${studentsMetadata.studentsPerClass}`);
+}
 
 // Helper function to get class statistics
 export const getClassStatistics = (className: string) => {

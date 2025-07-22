@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import {useEffect, useState} from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { Student, getStudentsByClass, allStudentsData } from '@/data/studentsData';
-import { getAllClassNames } from '@/data/classesData';
+import {useAuth} from '@/contexts/AuthContext';
+import {allStudentsData, getStudentsByClass, Student} from '@/data/studentsData';
+import {getAttendanceByClassAndDate} from '@/data/attendanceData';
 
 export default function AttendanceTable() {
   const { teacher } = useAuth();
@@ -18,16 +18,40 @@ export default function AttendanceTable() {
   const [filterStatus, setFilterStatus] = useState<string>('Semua');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Load students based on authentication state
+  // Load students based on authentication state and merge with attendance data
   useEffect(() => {
-    if (teacher?.className) {
-      // Teacher logged in: show only their class students
-      const classStudents = getStudentsByClass(teacher.className);
-      setStudents(classStudents);
-    } else {
-      // No teacher logged in: show all students
-      setStudents(allStudentsData);
-    }
+    const loadStudentsWithAttendance = () => {
+      let baseStudents: Student[] = [];
+
+      if (teacher?.className) {
+        // Teacher logged in: show only their class students
+        baseStudents = getStudentsByClass(teacher.className);
+      } else {
+        // No teacher logged in: show all students
+        baseStudents = allStudentsData;
+      }
+
+      // Get today's date for attendance lookup
+      const today = new Date().toISOString().split('T')[0];
+
+      // Merge students with today's attendance data
+      const studentsWithAttendance = baseStudents.map(student => {
+        // Get attendance records for this student's class and today's date
+        const attendanceRecords = getAttendanceByClassAndDate(student.class, today);
+        const attendanceRecord = attendanceRecords.find(record => record.studentName === student.name);
+
+        return {
+          ...student,
+          status: attendanceRecord?.status || student.status,
+          checkInTime: attendanceRecord?.timeIn || student.checkInTime,
+          notes: attendanceRecord?.notes || student.notes
+        };
+      });
+
+      setStudents(studentsWithAttendance);
+    };
+
+    loadStudentsWithAttendance();
   }, [teacher]);
 
   // Dapatkan styling badge status
@@ -51,29 +75,35 @@ export default function AttendanceTable() {
   const availableClasses = ['Semua', ...Array.from(new Set(allStudentsData.map(s => s.class)))];
   const availableStatuses = ['Semua', 'Hadir', 'Tidak Hadir', 'Terlambat', 'Izin'];
 
-  // Filter and sort students based on selected filters (only for public view)
-  const filteredStudents = teacher ? students : (() => {
-    let filtered = students.filter(student => {
-      const classMatch = filterClass === 'Semua' || student.class === filterClass;
-      const statusMatch = filterStatus === 'Semua' || student.status === filterStatus;
-      const searchMatch = searchQuery === '' ||
-        student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        student.studentId.toLowerCase().includes(searchQuery.toLowerCase());
-      return classMatch && statusMatch && searchMatch;
-    });
-
-    // Sort the filtered results
-    return filtered.sort((a, b) => {
-      // If showing all classes, sort by class first, then by name
-      if (filterClass === 'Semua') {
-        if (a.class !== b.class) {
-          return a.class.localeCompare(b.class);
-        }
+  // Helper function to sort students by class then name
+  const sortStudents = (studentList: Student[]) => {
+    return studentList.sort((a, b) => {
+      // First sort by class
+      if (a.class !== b.class) {
+        return a.class.localeCompare(b.class);
       }
       // Then sort by student name
       return a.name.localeCompare(b.name);
     });
-  })();
+  };
+
+  // Filter and sort students
+  const filteredStudents = teacher ?
+    // Teacher view: just sort the students
+    sortStudents([...students]) :
+    // Public view: filter then sort
+    (() => {
+      const filtered = students.filter(student => {
+        const classMatch = filterClass === 'Semua' || student.class === filterClass;
+        const statusMatch = filterStatus === 'Semua' || student.status === filterStatus;
+        const searchMatch = searchQuery === '' ||
+          student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          student.nisn.toLowerCase().includes(searchQuery.toLowerCase());
+        return classMatch && statusMatch && searchMatch;
+      });
+
+      return sortStudents(filtered);
+    })();
 
   // Fungsi untuk mendapatkan waktu saat ini
   const getCurrentTime = () => {
@@ -107,12 +137,11 @@ export default function AttendanceTable() {
   const saveEdit = (studentId: string) => {
     setStudents(prev => prev.map(student => {
       if (student.id === studentId) {
-        const updatedStudent = {
-          ...student,
-          status: tempStatus,
-          checkInTime: (tempStatus === 'Hadir' || tempStatus === 'Terlambat') ? tempCheckInTime : undefined,
+          return {
+            ...student,
+            status: tempStatus,
+            checkInTime: (tempStatus === 'Hadir' || tempStatus === 'Terlambat') ? tempCheckInTime : undefined,
         };
-        return updatedStudent;
       }
       return student;
     }));
@@ -239,17 +268,6 @@ export default function AttendanceTable() {
             }
           </p>
         </div>
-        {teacher && (
-          <Link
-            href="/absen-manual"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Input Manual
-          </Link>
-        )}
       </div>
 
       {/* Tabel */}
@@ -274,7 +292,7 @@ export default function AttendanceTable() {
                 className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
               >
                 <td className="py-3 px-4 text-gray-900 dark:text-gray-100 font-mono">
-                  {student.studentId}
+                  {student.nisn}
                 </td>
                 <td className="py-3 px-4 text-gray-900 dark:text-gray-100 font-medium">
                   {student.name}

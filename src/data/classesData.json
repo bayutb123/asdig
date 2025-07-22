@@ -1,0 +1,311 @@
+{
+  "metadata": {
+    "totalClasses": 12,
+    "totalTeachers": 12,
+    "totalAdmins": 3,
+    "generatedAt": "2025-07-21T13:45:20.430Z"
+  },
+  "classes": [
+    {
+      "id": "1a",
+      "name": "1A",
+      "grade": 1,
+      "section": "A",
+      "teacherId": "teacher-1a",
+      "teacherName": "Ibu Sari Dewi, S.Pd",
+      "studentCount": 36
+    },
+    {
+      "id": "1b",
+      "name": "1B",
+      "grade": 1,
+      "section": "B",
+      "teacherId": "teacher-1b",
+      "teacherName": "Ibu Rina Marlina, S.Pd",
+      "studentCount": 36
+    },
+    {
+      "id": "2a",
+      "name": "2A",
+      "grade": 2,
+      "section": "A",
+      "teacherId": "teacher-2a",
+      "teacherName": "Bapak Agus Salim, S.Pd",
+      "studentCount": 36
+    },
+    {
+      "id": "2b",
+      "name": "2B",
+      "grade": 2,
+      "section": "B",
+      "teacherId": "teacher-2b",
+      "teacherName": "Ibu Wulan Dari, S.Pd",
+      "studentCount": 36
+    },
+    {
+      "id": "3a",
+      "name": "3A",
+      "grade": 3,
+      "section": "A",
+      "teacherId": "teacher-3a",
+      "teacherName": "Ibu Sinta Bella, S.Pd",
+      "studentCount": 36
+    },
+    {
+      "id": "3b",
+      "name": "3B",
+      "grade": 3,
+      "section": "B",
+      "teacherId": "teacher-3b",
+      "teacherName": "Bapak Doni Saputra, S.Pd",
+      "studentCount": 36
+    },
+    {
+      "id": "4a",
+      "name": "4A",
+      "grade": 4,
+      "section": "A",
+      "teacherId": "teacher-4a",
+      "teacherName": "Ibu Mega Wati, S.Pd",
+      "studentCount": 36
+    },
+    {
+      "id": "4b",
+      "name": "4B",
+      "grade": 4,
+      "section": "B",
+      "teacherId": "teacher-4b",
+      "teacherName": "Bapak Rian Hidayat, S.Pd",
+      "studentCount": 36
+    },
+    {
+      "id": "5a",
+      "name": "5A",
+      "grade": 5,
+      "section": "A",
+      "teacherId": "teacher-5a",
+      "teacherName": "Ibu Tari Sari, S.Pd",
+      "studentCount": 36
+    },
+    {
+      "id": "5b",
+      "name": "5B",
+      "grade": 5,
+      "section": "B",
+      "teacherId": "teacher-5b",
+      "teacherName": "Bapak Vino Mahendra, S.Pd",
+      "studentCount": 36
+    },
+    {
+      "id": "6a",
+      "name": "6A",
+      "grade": 6,
+      "section": "A",
+      "teacherId": "teacher-6a",
+      "teacherName": "Ibu Yuni Astuti, S.Pd",
+      "studentCount": 36
+    },
+    {
+      "id": "6b",
+      "name": "6B",
+      "grade": 6,
+      "section": "B",
+      "teacherId": "teacher-6b",
+      "teacherName": "Bapak Zaki Maulana, S.Pd",
+      "studentCount": 36
+    }
+  ],
+  "teachers": [
+    {
+      "id": "teacher-1a",
+      "name": "Ibu Sari Dewi, S.Pd",
+      "nip": "196801011990032001",
+      "username": "walikelas1a",
+      "password": "password123",
+      "classId": "1a",
+      "className": "1A",
+      "subject": "Wali Kelas",
+      "phone": "081234567801",
+      "email": "sari.dewi@sd.sch.id",
+      "role": "teacher"
+    },
+    {
+      "id": "teacher-1b",
+      "name": "Ibu Rina Marlina, S.Pd",
+      "nip": "196802021990032002",
+      "username": "walikelas1b",
+      "password": "password123",
+      "classId": "1b",
+      "className": "1B",
+      "subject": "Wali Kelas",
+      "phone": "081234567802",
+      "email": "rina.marlina@sd.sch.id",
+      "role": "teacher"
+    },
+    {
+      "id": "teacher-2a",
+      "name": "Bapak Agus Salim, S.Pd",
+      "nip": "196803031990031001",
+      "username": "walikelas2a",
+      "password": "password123",
+      "classId": "2a",
+      "className": "2A",
+      "subject": "Wali Kelas",
+      "phone": "081234567803",
+      "email": "agus.salim@sd.sch.id",
+      "role": "teacher"
+    },
+    {
+      "id": "teacher-2b",
+      "name": "Ibu Wulan Dari, S.Pd",
+      "nip": "196804041990032003",
+      "username": "walikelas2b",
+      "password": "password123",
+      "classId": "2b",
+      "className": "2B",
+      "subject": "Wali Kelas",
+      "phone": "081234567804",
+      "email": "wulan.dari@sd.sch.id",
+      "role": "teacher"
+    },
+    {
+      "id": "teacher-3a",
+      "name": "Ibu Sinta Bella, S.Pd",
+      "nip": "196805051990032004",
+      "username": "walikelas3a",
+      "password": "password123",
+      "classId": "3a",
+      "className": "3A",
+      "subject": "Wali Kelas",
+      "phone": "081234567805",
+      "email": "sinta.bella@sd.sch.id",
+      "role": "teacher"
+    },
+    {
+      "id": "teacher-3b",
+      "name": "Bapak Doni Saputra, S.Pd",
+      "nip": "196806061990031002",
+      "username": "walikelas3b",
+      "password": "password123",
+      "classId": "3b",
+      "className": "3B",
+      "subject": "Wali Kelas",
+      "phone": "081234567806",
+      "email": "doni.saputra@sd.sch.id",
+      "role": "teacher"
+    },
+    {
+      "id": "teacher-4a",
+      "name": "Ibu Mega Wati, S.Pd",
+      "nip": "196807071990032005",
+      "username": "walikelas4a",
+      "password": "password123",
+      "classId": "4a",
+      "className": "4A",
+      "subject": "Wali Kelas",
+      "phone": "081234567807",
+      "email": "mega.wati@sd.sch.id",
+      "role": "teacher"
+    },
+    {
+      "id": "teacher-4b",
+      "name": "Bapak Rian Hidayat, S.Pd",
+      "nip": "196808081990031003",
+      "username": "walikelas4b",
+      "password": "password123",
+      "classId": "4b",
+      "className": "4B",
+      "subject": "Wali Kelas",
+      "phone": "081234567808",
+      "email": "rian.hidayat@sd.sch.id",
+      "role": "teacher"
+    },
+    {
+      "id": "teacher-5a",
+      "name": "Ibu Tari Sari, S.Pd",
+      "nip": "196809091990032006",
+      "username": "walikelas5a",
+      "password": "password123",
+      "classId": "5a",
+      "className": "5A",
+      "subject": "Wali Kelas",
+      "phone": "081234567809",
+      "email": "tari.sari@sd.sch.id",
+      "role": "teacher"
+    },
+    {
+      "id": "teacher-5b",
+      "name": "Bapak Vino Mahendra, S.Pd",
+      "nip": "196810101990031004",
+      "username": "walikelas5b",
+      "password": "password123",
+      "classId": "5b",
+      "className": "5B",
+      "subject": "Wali Kelas",
+      "phone": "081234567810",
+      "email": "vino.mahendra@sd.sch.id",
+      "role": "teacher"
+    },
+    {
+      "id": "teacher-6a",
+      "name": "Ibu Yuni Astuti, S.Pd",
+      "nip": "196811111990032007",
+      "username": "walikelas6a",
+      "password": "password123",
+      "classId": "6a",
+      "className": "6A",
+      "subject": "Wali Kelas",
+      "phone": "081234567811",
+      "email": "yuni.astuti@sd.sch.id",
+      "role": "teacher"
+    },
+    {
+      "id": "teacher-6b",
+      "name": "Bapak Zaki Maulana, S.Pd",
+      "nip": "196812121990031005",
+      "username": "walikelas6b",
+      "password": "password123",
+      "classId": "6b",
+      "className": "6B",
+      "subject": "Wali Kelas",
+      "phone": "081234567812",
+      "email": "zaki.maulana@sd.sch.id",
+      "role": "teacher"
+    }
+  ],
+  "admins": [
+    {
+      "id": "admin-001",
+      "name": "Ibu Siti Rahayu, S.Pd",
+      "nip": "196501011985032001",
+      "username": "admin",
+      "password": "admin123",
+      "position": "Kepala Tata Usaha",
+      "phone": "081234567901",
+      "email": "siti.rahayu@sd.sch.id",
+      "role": "admin"
+    },
+    {
+      "id": "admin-002",
+      "name": "Bapak Agus Santoso, S.Kom",
+      "nip": "197002021995031001",
+      "username": "tatausaha",
+      "password": "tatausaha123",
+      "position": "Staff Tata Usaha",
+      "phone": "081234567902",
+      "email": "agus.santoso@sd.sch.id",
+      "role": "admin"
+    },
+    {
+      "id": "admin-003",
+      "name": "Ibu Dewi Kartika, S.E",
+      "nip": "197503031998032001",
+      "username": "keuangan",
+      "password": "keuangan123",
+      "position": "Staff Keuangan",
+      "phone": "081234567903",
+      "email": "dewi.kartika@sd.sch.id",
+      "role": "admin"
+    }
+  ]
+}

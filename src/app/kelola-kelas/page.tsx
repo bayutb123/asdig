@@ -25,20 +25,15 @@ export default function KelolaKelasPage() {
     maxStudents: 36
   });
 
-  // Check authentication and admin access
+  // Check authentication
   useEffect(() => {
     if (!user) {
       router.push('/login');
       return;
     }
 
-    if (!hasAdminAccess) {
-      router.push('/dashboard');
-      return;
-    }
-
     setLoading(false);
-  }, [user, hasAdminAccess, router]);
+  }, [user, router]);
 
   const handleAddClass = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,31 +50,24 @@ export default function KelolaKelasPage() {
     // Create class data
     const classData = {
       name: className,
-      level: newClass.level,
+      grade: parseInt(newClass.level),
       section: newClass.section,
       teacherId: '', // Will be set by context
       teacherName: newClass.teacherName,
-      teacherNip: newClass.teacherNip,
-      academicYear: '2024/2025',
-      semester: 1,
-      maxStudents: newClass.maxStudents,
-      currentStudents: 0,
-      schedule: [
-        { day: 'Senin', startTime: '07:00', endTime: '12:00', subject: 'Tematik' },
-        { day: 'Selasa', startTime: '07:00', endTime: '12:00', subject: 'Tematik' },
-        { day: 'Rabu', startTime: '07:00', endTime: '12:00', subject: 'Tematik' },
-        { day: 'Kamis', startTime: '07:00', endTime: '12:00', subject: 'Tematik' },
-        { day: 'Jumat', startTime: '07:00', endTime: '11:00', subject: 'Tematik' },
-      ]
+      studentCount: 0
     };
 
     // Create teacher data
     const teacherData = {
       name: newClass.teacherName,
       nip: newClass.teacherNip,
+      username: `walikelas${newClass.level.toLowerCase()}${newClass.section.toLowerCase()}`,
+      password: 'password123',
       className: className,
+      subject: 'Wali Kelas',
       phone: newClass.teacherPhone,
-      email: newClass.teacherEmail
+      email: newClass.teacherEmail,
+      role: 'teacher' as const
     };
 
     // Add new class using context
@@ -107,6 +95,35 @@ export default function KelolaKelasPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check if user has admin access - Teachers cannot access this page
+  if (!hasAdminAccess) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-md">
+            <div className="text-red-600 dark:text-red-400 mb-4">
+              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+              Akses Ditolak
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Hanya admin yang memiliki hak untuk mengelola kelas. Guru tidak diizinkan mengakses halaman ini.
+            </p>
+            <Link
+              href="/dashboard"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+            >
+              Kembali ke Dashboard
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -188,7 +205,7 @@ export default function KelolaKelasPage() {
               Total Siswa
             </h3>
             <p className="text-3xl font-bold text-purple-600">
-              {classes.reduce((sum, cls) => sum + cls.currentStudents, 0)}
+              {classes.reduce((sum, cls) => sum + cls.studentCount, 0)}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
@@ -196,7 +213,7 @@ export default function KelolaKelasPage() {
               Kapasitas Total
             </h3>
             <p className="text-3xl font-bold text-orange-600">
-              {classes.reduce((sum, cls) => sum + cls.maxStudents, 0)}
+              {classes.length * 36}
             </p>
           </div>
         </div>
@@ -241,7 +258,7 @@ export default function KelolaKelasPage() {
                         {cls.name}
                       </div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        Tingkat {cls.level} - Bagian {cls.section}
+                        Tingkat {cls.grade} - Bagian {cls.section}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -250,21 +267,21 @@ export default function KelolaKelasPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {cls.teacherNip}
+                      {cls.teacherId}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {cls.currentStudents}/{cls.maxStudents}
+                        {cls.studentCount}/36
                       </div>
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-1">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full" 
-                          style={{ width: `${(cls.currentStudents / cls.maxStudents) * 100}%` }}
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
+                          style={{ width: `${(cls.studentCount / 36) * 100}%` }}
                         ></div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                      {cls.academicYear}
+                      2024/2025
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4">

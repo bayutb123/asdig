@@ -6,6 +6,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link';
 import { Student, getStudentsByClass } from '@/data/studentsData';
+import {
+  getAttendanceByClassAndDate,
+  AttendanceRecord,
+  AttendanceStatus,
+  getAvailableDates
+} from '@/data/attendanceData';
 
 
 
@@ -13,24 +19,52 @@ export default function ManualAttendancePage() {
   const { user, teacher, admin, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useAuth();
   const router = useRouter();
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedClass, setSelectedClass] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
 
-  // Load students for teacher's class or all students for admin
+  // Initialize default values - Only for teachers
   useEffect(() => {
     if (hasTeacherAccess && teacher?.className) {
-      const classStudents = getStudentsByClass(teacher.className);
-      setStudents(classStudents);
-    } else if (hasAdminAccess) {
-      // Admin can see all students - for now, show first class as example
-      // In a real app, admin would select which class to manage
-      const allStudents = getStudentsByClass('1A'); // Default to first class
-      setStudents(allStudents);
+      setSelectedClass(teacher.className);
+
+      // Set default date to latest available date
+      const availableDates = getAvailableDates();
+      const latestDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] : new Date().toISOString().split('T')[0];
+      setSelectedDate(latestDate);
     }
-  }, [teacher, admin, hasTeacherAccess, hasAdminAccess]);
+  }, [teacher, hasTeacherAccess]);
+
+  // Load students and attendance data when class or date changes
+  useEffect(() => {
+    if (selectedClass && selectedDate) {
+      loadAttendanceData();
+    }
+  }, [selectedClass, selectedDate]);
+
+  const loadAttendanceData = () => {
+    // Get students for the selected class
+    const classStudents = getStudentsByClass(selectedClass);
+
+    // Get attendance records for this class and date
+    const attendanceRecords = getAttendanceByClassAndDate(selectedClass, selectedDate);
+
+    // Merge student data with attendance data
+    const studentsWithAttendance = classStudents.map(student => {
+      const attendanceRecord = attendanceRecords.find(record => record.studentName === student.name);
+      return {
+        ...student,
+        status: attendanceRecord?.status || 'Hadir' as AttendanceStatus,
+        checkInTime: attendanceRecord?.timeIn, // Map timeIn to checkInTime
+        notes: attendanceRecord?.notes
+      };
+    });
+
+    setStudents(studentsWithAttendance);
+  };
 
   const handleStatusChange = (studentId: string, newStatus: Student['status']) => {
     setStudents(prev => prev.map(student => {
@@ -152,14 +186,45 @@ export default function ManualAttendancePage() {
     excused: students.filter(s => s.status === 'Izin').length
   };
 
-  // Show loading if auth is still loading or teacher data is not available
-  if (isLoading || !teacher) {
+  // Check if user has teacher access - Admin cannot access this page
+  if (isLoading) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600 dark:text-gray-300">Memuat data absensi...</p>
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
+
+  // Redirect admin users - they don't have access to input attendance
+  if (admin || !hasTeacherAccess || !teacher) {
+    return (
+      <ProtectedRoute>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+          <div className="text-center">
+            <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg max-w-md">
+              <div className="text-red-600 dark:text-red-400 mb-4">
+                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                Akses Ditolak
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                Hanya guru yang memiliki hak untuk menginput absensi siswa. Admin tidak diizinkan mengakses halaman ini.
+              </p>
+              <Link
+                href="/dashboard"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+              >
+                Kembali ke Dashboard
+              </Link>
+            </div>
           </div>
         </div>
       </ProtectedRoute>
@@ -184,10 +249,10 @@ export default function ManualAttendancePage() {
                 </Link>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                    Absen Manual - SD
+                    Absen Manual - Kelas {selectedClass}
                   </h1>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    {admin ? `Admin - ${admin.name}` : teacher ? `Kelas ${teacher.className} - ${teacher.name}` : 'Loading...'}
+                    Kelas {teacher.className} - {teacher.name}
                   </p>
                 </div>
               </div>
@@ -328,7 +393,7 @@ export default function ManualAttendancePage() {
                         {index + 1}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-mono text-gray-900 dark:text-gray-100">
-                        {student.studentId}
+                        {student.nisn}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                         {student.name}
