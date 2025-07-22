@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import {useState, useEffect, useCallback} from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -53,14 +53,8 @@ export default function LaporanAbsenPage() {
     setLoading(false);
   }, [user, teacher, hasTeacherAccess, router]);
 
-  // Generate attendance reports
-  useEffect(() => {
-    if (!loading) {
-      generateReports();
-    }
-  }, [selectedClass, selectedDateRange, startDate, endDate, loading]);
-
-  const generateReports = () => {
+  // Define generateReports function
+  const generateReports = useCallback(() => {
     const classes = getAllClasses();
 
     // Filter classes based on selection and user role
@@ -114,7 +108,14 @@ export default function LaporanAbsenPage() {
     });
 
     setReports(generatedReports);
-  };
+  }, [selectedClass, hasTeacherAccess, teacher, selectedDateRange, startDate, endDate]);
+
+  // Generate attendance reports
+  useEffect(() => {
+    if (!loading) {
+      generateReports();
+    }
+  }, [selectedClass, selectedDateRange, startDate, endDate, loading, generateReports]);
 
   const exportToCSV = () => {
     const headers = ['Tanggal', 'Kelas', 'Total Siswa', 'Hadir', 'Terlambat', 'Tidak Hadir', 'Izin', 'Tingkat Kehadiran (%)'];
@@ -159,7 +160,7 @@ export default function LaporanAbsenPage() {
     const reportTime = now.toLocaleTimeString('id-ID');
 
     // Determine the period text
-    let periodText = '';
+    let periodText: string;
     if (selectedDateRange === 'today') {
       periodText = 'Hari Ini';
     } else if (selectedDateRange === 'week') {
@@ -187,7 +188,7 @@ export default function LaporanAbsenPage() {
     // Create the print content
     const printContent = `
       <!DOCTYPE html>
-      <html>
+      <html lang="id">
       <head>
         <meta charset="utf-8">
         <title>Laporan Absensi - ${periodText}</title>

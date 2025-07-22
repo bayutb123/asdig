@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -45,14 +44,8 @@ export default function CetakAbsenPage() {
     }
   }, [teacher, hasTeacherAccess]);
 
-  // Load attendance data when dates change
-  useEffect(() => {
-    if (startDate && endDate && teacher?.className) {
-      loadAttendanceData();
-    }
-  }, [startDate, endDate, teacher]);
-
-  const loadAttendanceData = () => {
+  // Define loadAttendanceData function
+  const loadAttendanceData = useCallback(() => {
     if (!teacher?.className) return;
 
     // Get students for the class
@@ -94,7 +87,14 @@ export default function CetakAbsenPage() {
     });
     
     setAttendanceData(processedData);
-  };
+  }, [teacher, startDate, endDate]);
+
+  // Load attendance data when dates change
+  useEffect(() => {
+    if (startDate && endDate && teacher?.className) {
+      loadAttendanceData();
+    }
+  }, [startDate, endDate, teacher, loadAttendanceData]);
 
   const getDateRange = (start: string, end: string): string[] => {
     const dates: string[] = [];
@@ -214,7 +214,7 @@ export default function CetakAbsenPage() {
             padding: 10px;
             border: 1px solid #ddd;
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(7, 1fr);
             gap: 10px;
             text-align: center;
           }
@@ -326,6 +326,10 @@ export default function CetakAbsenPage() {
           <div class="summary-item">
             <div class="value">${totalAbsent}</div>
             <div class="label">Total Tidak Hadir</div>
+          </div>
+          <div class="summary-item">
+            <div class="value">${totalExcused}</div>
+            <div class="label">Total Izin</div>
           </div>
           <div class="summary-item">
             <div class="value">${attendanceRate.toFixed(1)}%</div>

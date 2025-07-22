@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link';
@@ -36,14 +36,8 @@ export default function ManualAttendancePage() {
     }
   }, [teacher, hasTeacherAccess]);
 
-  // Load students and attendance data when class or date changes
-  useEffect(() => {
-    if (selectedClass && selectedDate) {
-      loadAttendanceData();
-    }
-  }, [selectedClass, selectedDate]);
-
-  const loadAttendanceData = () => {
+  // Define loadAttendanceData function
+  const loadAttendanceData = useCallback(() => {
     // Get students for the selected class
     const classStudents = getStudentsByClass(selectedClass);
 
@@ -62,7 +56,14 @@ export default function ManualAttendancePage() {
     });
 
     setStudents(studentsWithAttendance);
-  };
+  }, [selectedClass, selectedDate]);
+
+  // Load students and attendance data when class or date changes
+  useEffect(() => {
+    if (selectedClass && selectedDate) {
+      loadAttendanceData();
+    }
+  }, [selectedClass, selectedDate, loadAttendanceData]);
 
   const handleStatusChange = (studentId: string, newStatus: Student['status']) => {
     setStudents(prev => prev.map(student => {
