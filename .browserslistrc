@@ -1,0 +1,39 @@
+# Browserslist configuration for modern JavaScript
+# This targets browsers that support ES2020+ features natively
+
+# Production builds - Modern browsers only
+[production]
+# Chrome 80+ (ES2020 support)
+Chrome >= 80
+# Firefox 72+ (ES2020 support)
+Firefox >= 72
+# Safari 13.1+ (ES2020 support)
+Safari >= 13.1
+# Edge 80+ (ES2020 support)
+Edge >= 80
+# iOS Safari 13.4+ (ES2020 support)
+iOS >= 13.4
+# Android Chrome 80+ (ES2020 support)
+ChromeAndroid >= 80
+# Samsung Internet 13+ (ES2020 support)
+Samsung >= 13
+# Opera 67+ (ES2020 support)
+Opera >= 67
+
+# Development builds - Include slightly older browsers for testing
+[development]
+# Last 2 versions of major browsers
+last 2 Chrome versions
+last 2 Firefox versions
+last 2 Safari versions
+last 2 Edge versions
+# But still exclude very old browsers
+not IE 11
+not dead
+not < 0.25%
+
+# Legacy support (if needed) - Uncomment if you need to support older browsers
+# [legacy]
+# > 0.25%
+# not dead
+# not IE 11

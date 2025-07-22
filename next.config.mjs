@@ -6,6 +6,31 @@ const nextConfig = {
     optimizePackageImports: ['react', 'react-dom'],
   },
 
+  // Modern JavaScript configuration
+  transpilePackages: [],
+
+  // Webpack configuration for modern browsers
+  webpack: (config, { dev, isServer }) => {
+    // Only apply optimizations in production
+    if (!dev && !isServer) {
+      // Target modern browsers (ES2020+)
+      config.target = ['web', 'es2020'];
+
+      // Optimize for modern JavaScript features
+      config.resolve.alias = {
+        ...config.resolve.alias,
+      };
+
+      // Enable modern module resolution
+      config.experiments = {
+        ...config.experiments,
+        topLevelAwait: true,
+      };
+    }
+
+    return config;
+  },
+
   // Turbopack configuration (stable in Next.js 15)
   turbopack: {
     rules: {
@@ -20,6 +45,22 @@ const nextConfig = {
   compiler: {
     // Remove console.log in production
     removeConsole: process.env.NODE_ENV === 'production',
+    // Enable modern JavaScript features
+    styledComponents: false,
+    // Optimize React components
+    reactRemoveProperties: process.env.NODE_ENV === 'production',
+  },
+
+  // Modern browser optimizations
+  modularizeImports: {
+    // Optimize lodash imports (if used)
+    'lodash': {
+      transform: 'lodash/{{member}}',
+    },
+    // Optimize date-fns imports (if used)
+    'date-fns': {
+      transform: 'date-fns/{{member}}',
+    },
   },
 
   // Security headers

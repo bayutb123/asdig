@@ -63,14 +63,30 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="theme-color" content="#3b82f6" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            /* Prevent layout shifts during initial load */
+            body { min-height: 100vh; }
+            .container { contain: layout; }
+            /* Reduce font loading layout shifts */
+            @font-face {
+              font-family: 'GeistSans';
+              src: url('/fonts/GeistSans-Regular.woff2') format('woff2'),
+                   url('/fonts/GeistSans-Regular.woff') format('woff');
+              font-display: swap;
+            }
+          `
+        }} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased stable-container`}
         suppressHydrationWarning
       >
         <AuthProvider>
           <ClassProvider>
-            {children}
+            <div className="stable-grid min-h-screen">
+              {children}
+            </div>
           </ClassProvider>
         </AuthProvider>
       </body>

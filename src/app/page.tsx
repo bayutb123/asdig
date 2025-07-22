@@ -29,7 +29,7 @@ export default function Home() {
         </div>
 
         {/* Attendance Table */}
-        <AttendanceTable />
+        <AttendanceTable headingLevel="h2" />
       </div>
     </div>
   );
