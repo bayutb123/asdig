@@ -104,7 +104,7 @@ try {
   const classNames = new Set(classesData.classes.map(c => c.name));
   const studentClassNames = new Set(studentsData.students.map(s => s.class));
 
-  const missingClasses = Array.from(studentClassNames).filter(name => !classNames.has(name));
+  const missingClasses = [...studentClassNames].filter(name => !classNames.has(name));
   if (missingClasses.length === 0) {
     console.log('✅ All student classes have corresponding class data');
   } else {
