@@ -14,8 +14,8 @@ const generateAttendanceJSON = () => {
       generatedAt: new Date().toISOString(),
       totalRecords: 0,
       dateRange: {
-        start: startDate.toISOString().split('T')[0],
-        end: endDate.toISOString().split('T')[0]
+        start: startDate.toLocaleDateString('sv-SE'),
+        end: endDate.toLocaleDateString('sv-SE')
       },
       schoolDays: 0,
       classes: ['1A', '1B', '2A', '2B', '3A', '3B', '4A', '4B', '5A', '5B', '6A', '6B'],
@@ -87,7 +87,7 @@ const generateAttendanceJSON = () => {
     // Skip weekends
     if (currentDate.getDay() !== 0 && currentDate.getDay() !== 6) {
       schoolDays++;
-      const dateString = currentDate.toISOString().split('T')[0];
+      const dateString = currentDate.toLocaleDateString('sv-SE');
       
       data.students.forEach(student => {
         // Generate realistic attendance patterns

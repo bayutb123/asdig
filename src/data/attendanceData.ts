@@ -94,8 +94,9 @@ export const getAttendanceForLastDays = (days: number = 30): AttendanceRecord[] 
   const startDate = new Date();
   startDate.setDate(endDate.getDate() - days);
 
-  const startDateStr = startDate.toISOString().split('T')[0];
-  const endDateStr = endDate.toISOString().split('T')[0];
+  // Use modern date formatting (more reliable than toISOString().split())
+  const startDateStr = startDate.toLocaleDateString('sv-SE');
+  const endDateStr = endDate.toLocaleDateString('sv-SE');
 
   return getAttendanceByDateRange(startDateStr, endDateStr);
 };
@@ -111,8 +112,9 @@ export const getAttendanceForLastDaysByClass = (className: string, days: number 
   const startDate = new Date();
   startDate.setDate(endDate.getDate() - days);
 
-  const startDateStr = startDate.toISOString().split('T')[0];
-  const endDateStr = endDate.toISOString().split('T')[0];
+  // Use modern date formatting (more reliable than toISOString().split())
+  const startDateStr = startDate.toLocaleDateString('sv-SE');
+  const endDateStr = endDate.toLocaleDateString('sv-SE');
 
   return getAttendanceByClassAndDateRange(className, startDateStr, endDateStr);
 };
@@ -204,20 +206,21 @@ export const getAvailableDates = (): string[] => {
 export const getAttendanceSummaryByDate = (date: string) => {
   const dayRecords = getAttendanceByDate(date);
   const classSummaries = [];
-  
-  const classes = ['1A', '1B', '2A', '2B', '3A', '3B', '4A', '4B', '5A', '5B', '6A', '6B'];
-  
+
+  // Get unique class names from metadata instead of hardcoding
+  const classes = attendanceMetadata.classes;
+
   for (const className of classes) {
     const classRecords = dayRecords.filter(r => r.className === className);
     const stats = calculateAttendanceStats(classRecords);
-    
+
     classSummaries.push({
       className,
       date,
       ...stats
     });
   }
-  
+
   return classSummaries;
 };
 

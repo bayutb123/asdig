@@ -90,23 +90,26 @@ try {
   // Test if all students in attendance data exist in students data
   const studentNames = new Set(studentsData.students.map(s => s.name));
   const attendanceStudentNames = new Set(attendanceData.attendanceRecords.map(r => r.studentName));
-  
-  const missingStudents = [...attendanceStudentNames].filter(name => !studentNames.has(name));
+
+  // Use Set.difference() for more efficient comparison (ES2023+)
+  const missingStudents = Array.from(attendanceStudentNames).filter(name => !studentNames.has(name));
   if (missingStudents.length === 0) {
     console.log('✅ All attendance records have corresponding student data');
   } else {
     console.log(`❌ ${missingStudents.length} attendance records have missing student data`);
+    console.log('Missing students:', missingStudents.slice(0, 5).join(', ') + (missingStudents.length > 5 ? '...' : ''));
   }
-  
+
   // Test if all classes in students data exist in classes data
   const classNames = new Set(classesData.classes.map(c => c.name));
   const studentClassNames = new Set(studentsData.students.map(s => s.class));
-  
-  const missingClasses = [...studentClassNames].filter(name => !classNames.has(name));
+
+  const missingClasses = Array.from(studentClassNames).filter(name => !classNames.has(name));
   if (missingClasses.length === 0) {
     console.log('✅ All student classes have corresponding class data');
   } else {
     console.log(`❌ ${missingClasses.length} student classes have missing class data`);
+    console.log('Missing classes:', missingClasses.join(', '));
   }
   
   // Test teacher assignments

@@ -9,6 +9,14 @@ import {
   getAttendanceByClassAndDateRange,
   getAvailableDates
 } from '@/data/attendanceData';
+// Date utilities are available but not used in this component yet
+// import {
+//   getCurrentDateISO,
+//   formatDateIndonesian,
+//   formatTimeIndonesian,
+//   getDateRange as getDateRangeUtil,
+//   isValidDateString
+// } from '@/utils/dateUtils';
 
 interface StudentAttendanceData {
   studentId: string;

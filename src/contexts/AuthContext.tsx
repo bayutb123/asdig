@@ -29,22 +29,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user is logged in on app start
     const checkAuth = () => {
       try {
+        // Check if we're in browser environment (SSR-safe)
+        if (typeof window === 'undefined') {
+          setIsLoading(false);
+          return;
+        }
+
         const storedIsLoggedIn = localStorage.getItem('isLoggedIn');
         const storedUser = localStorage.getItem('user');
 
         if (storedIsLoggedIn === 'true' && storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
+          try {
+            const parsedUser = JSON.parse(storedUser);
 
-          if (isTeacher(parsedUser)) {
-            setTeacher(parsedUser);
-            setAdmin(null);
-          } else if (isAdmin(parsedUser)) {
-            setAdmin(parsedUser);
-            setTeacher(null);
+            // Validate parsed user data
+            if (parsedUser && typeof parsedUser === 'object' && parsedUser.id && parsedUser.role) {
+              setUser(parsedUser);
+
+              if (isTeacher(parsedUser)) {
+                setTeacher(parsedUser);
+                setAdmin(null);
+              } else if (isAdmin(parsedUser)) {
+                setAdmin(parsedUser);
+                setTeacher(null);
+              }
+
+              setIsLoggedIn(true);
+            } else {
+              // Invalid user data, clear storage
+              localStorage.removeItem('isLoggedIn');
+              localStorage.removeItem('user');
+            }
+          } catch (parseError) {
+            console.error('Error parsing stored user data:', parseError);
+            // Clear corrupted data
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('user');
           }
-
-          setIsLoggedIn(true);
         }
       } catch (error) {
         console.error('Error checking auth:', error);
@@ -61,37 +82,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (username: string, password: string): boolean => {
-    const userData = validateUserCredentials(username, password);
+    try {
+      const userData = validateUserCredentials(username, password);
 
-    if (userData) {
-      setUser(userData);
+      if (userData) {
+        setUser(userData);
 
-      if (isTeacher(userData)) {
-        setTeacher(userData);
-        setAdmin(null);
-      } else if (isAdmin(userData)) {
-        setAdmin(userData);
-        setTeacher(null);
+        if (isTeacher(userData)) {
+          setTeacher(userData);
+          setAdmin(null);
+        } else if (isAdmin(userData)) {
+          setAdmin(userData);
+          setTeacher(null);
+        }
+
+        setIsLoggedIn(true);
+
+        // SSR-safe localStorage operations
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('user', JSON.stringify(userData));
+          } catch (storageError) {
+            console.error('Error saving to localStorage:', storageError);
+            // Continue with login even if localStorage fails
+          }
+        }
+
+        return true;
       }
 
-      setIsLoggedIn(true);
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('user', JSON.stringify(userData));
-
-      return true;
+      return false;
+    } catch (error) {
+      console.error('Error during login:', error);
+      return false;
     }
-
-    return false;
   };
 
   const logout = () => {
-    setUser(null);
-    setTeacher(null);
-    setAdmin(null);
-    setIsLoggedIn(false);
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('user');
-    localStorage.removeItem('teacher'); // Legacy cleanup
+    try {
+      setUser(null);
+      setTeacher(null);
+      setAdmin(null);
+      setIsLoggedIn(false);
+
+      // SSR-safe localStorage operations
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem('user');
+          localStorage.removeItem('teacher'); // Legacy cleanup
+        } catch (storageError) {
+          console.error('Error clearing localStorage:', storageError);
+        }
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   const value = {

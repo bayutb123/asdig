@@ -11,8 +11,16 @@ export default function DashboardPage() {
   const router = useRouter();
 
   const handleLogout = () => {
-    logout();
-    router.push('/login');
+    try {
+      logout();
+      router.push('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Fallback navigation
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+    }
   };
 
   // Show loading if auth is still loading or no user data is available

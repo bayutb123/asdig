@@ -30,8 +30,8 @@ export default function AttendanceTable() {
         baseStudents = allStudentsData;
       }
 
-      // Get today's date for attendance lookup
-      const today = new Date().toISOString().split('T')[0];
+      // Get today's date for attendance lookup (modern format)
+      const today = new Date().toLocaleDateString('sv-SE');
 
       // Merge students with today's attendance data
       const studentsWithAttendance = baseStudents.map(student => {

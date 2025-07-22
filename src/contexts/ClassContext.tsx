@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { ClassInfo, Teacher, getAllClasses, getAllTeachers } from '@/data/classesData';
 
 interface ClassContextType {
@@ -24,18 +24,18 @@ export function ClassProvider({ children }: ClassProviderProps) {
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
 
+  const refreshData = useCallback(() => {
+    setClasses(getAllClasses());
+    setTeachers(getAllTeachers());
+  }, []);
+
   // Load initial data
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [refreshData]);
 
-  const refreshData = () => {
-    setClasses(getAllClasses());
-    setTeachers(getAllTeachers());
-  };
-
-  const addNewClass = (
-    classData: Omit<ClassInfo, 'id'>, 
+  const addNewClass = useCallback((
+    classData: Omit<ClassInfo, 'id'>,
     teacherData: Omit<Teacher, 'id' | 'classId'>
   ) => {
     // Generate new IDs
@@ -65,37 +65,37 @@ export function ClassProvider({ children }: ClassProviderProps) {
     // In a real application, you would make API calls here
     console.log('New class added:', newClass);
     console.log('New teacher added:', newTeacher);
-  };
+  }, [classes.length, teachers.length]);
 
-  const updateClass = (classId: string, classData: Partial<ClassInfo>) => {
-    setClasses(prev => 
-      prev.map(cls => 
+  const updateClass = useCallback((classId: string, classData: Partial<ClassInfo>) => {
+    setClasses(prev =>
+      prev.map(cls =>
         cls.id === classId ? { ...cls, ...classData } : cls
       )
     );
 
     // In a real application, you would make an API call here
     console.log('Class updated:', classId, classData);
-  };
+  }, []);
 
-  const deleteClass = (classId: string) => {
+  const deleteClass = useCallback((classId: string) => {
     // Remove class
     setClasses(prev => prev.filter(cls => cls.id !== classId));
-    
+
     // Remove associated teacher
     setTeachers(prev => prev.filter(teacher => teacher.classId !== classId));
 
     // In a real application, you would make API calls here
     console.log('Class deleted:', classId);
-  };
+  }, []);
 
-  const getClassById = (classId: string): ClassInfo | undefined => {
+  const getClassById = useCallback((classId: string): ClassInfo | undefined => {
     return classes.find(cls => cls.id === classId);
-  };
+  }, [classes]);
 
-  const getTeacherByClassId = (classId: string): Teacher | undefined => {
+  const getTeacherByClassId = useCallback((classId: string): Teacher | undefined => {
     return teachers.find(teacher => teacher.classId === classId);
-  };
+  }, [teachers]);
 
   const value: ClassContextType = {
     classes,
