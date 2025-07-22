@@ -70,6 +70,9 @@ export default function RootLayout({
             .container { contain: layout; }
             /* Reduce font loading layout shifts */
             @font-face {
+              font-family: 'GeistSans';
+              src: url('/fonts/GeistSans-Regular.woff2') format('woff2'),
+                   url('/fonts/GeistSans-Regular.woff') format('woff');
               font-display: swap;
             }
           `
