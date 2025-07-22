@@ -16,7 +16,7 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
   const [loading, setLoading] = useState<boolean>(true);
 
   // Dynamic heading components for proper hierarchy
-  const FilterHeadingComponent = headingLevel;
+  const FilterHeadingLevel = headingLevel;
   const TableHeadingComponent = headingLevel === 'h1' ? 'h2' :
                                headingLevel === 'h2' ? 'h3' :
                                headingLevel === 'h3' ? 'h4' :
