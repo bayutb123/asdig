@@ -92,7 +92,7 @@ try {
   const attendanceStudentNames = new Set(attendanceData.attendanceRecords.map(r => r.studentName));
 
   // Use Set.difference() for more efficient comparison (ES2023+)
-  const missingStudents = Array.from(attendanceStudentNames).filter(name => !studentNames.has(name));
+  const missingStudents = [...attendanceStudentNames].filter(name => !studentNames.has(name));
   if (missingStudents.length === 0) {
     console.log('✅ All attendance records have corresponding student data');
   } else {
