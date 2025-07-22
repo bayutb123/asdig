@@ -1,7 +1,6 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import Link from 'next/link';
 import {useAuth} from '@/contexts/AuthContext';
 import {allStudentsData, getStudentsByClass, Student} from '@/data/studentsData';
 import {getAttendanceByClassAndDate} from '@/data/attendanceData';
