@@ -5,8 +5,12 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:modern": "BROWSERSLIST_ENV=production next build",
+    "build:legacy": "BROWSERSLIST_ENV=legacy next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "analyze": "ANALYZE=true npm run build",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "react": "19.1.0",
