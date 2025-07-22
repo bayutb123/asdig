@@ -14,7 +14,16 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
-      router.push('/login');
+      // Add error handling for navigation
+      try {
+        router.push('/login');
+      } catch (error) {
+        console.error('Navigation error:', error);
+        // Fallback: try to redirect using window.location
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      }
     }
   }, [isLoggedIn, isLoading, router]);
 

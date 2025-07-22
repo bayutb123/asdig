@@ -46,7 +46,8 @@ export default function LaporanAbsenPage() {
     
     // Set default date to latest available date from attendance data
     const availableDates = getAvailableDates();
-    const latestDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] : new Date().toISOString().split('T')[0];
+    const latestDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] :
+      new Date().toLocaleDateString('sv-SE'); // Modern ISO date format (YYYY-MM-DD)
     setStartDate(latestDate);
     setEndDate(latestDate);
     

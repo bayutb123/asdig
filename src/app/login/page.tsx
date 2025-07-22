@@ -20,7 +20,15 @@ export default function LoginPage() {
   // Redirect if already logged in
   useEffect(() => {
     if (isLoggedIn) {
-      router.push('/dashboard');
+      try {
+        router.push('/dashboard');
+      } catch (error) {
+        console.error('Navigation error:', error);
+        // Fallback navigation
+        if (typeof window !== 'undefined') {
+          window.location.href = '/dashboard';
+        }
+      }
     }
   }, [isLoggedIn, router]);
 
@@ -46,8 +54,16 @@ export default function LoginPage() {
     const loginSuccess = login(formData.username, formData.password);
 
     if (loginSuccess) {
-      // Redirect to dashboard
-      router.push('/dashboard');
+      // Redirect to dashboard with error handling
+      try {
+        router.push('/dashboard');
+      } catch (error) {
+        console.error('Navigation error:', error);
+        // Fallback navigation
+        if (typeof window !== 'undefined') {
+          window.location.href = '/dashboard';
+        }
+      }
     } else {
       setError('Username atau password salah. Silakan coba lagi.');
     }

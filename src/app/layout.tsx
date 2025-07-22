@@ -15,8 +15,41 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Absen Digital",
+  title: {
+    default: "Absen Digital",
+    template: "%s | Absen Digital"
+  },
   description: "Sistem absensi digital untuk sekolah dan organisasi modern",
+  keywords: ["absensi", "digital", "sekolah", "attendance", "management"],
+  authors: [{ name: "Absen Digital Team" }],
+  creator: "Absen Digital",
+  publisher: "Absen Digital",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  openGraph: {
+    title: "Absen Digital",
+    description: "Sistem absensi digital untuk sekolah dan organisasi modern",
+    type: "website",
+    locale: "id_ID",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
 };
 
 export default function RootLayout({
@@ -25,9 +58,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <meta name="theme-color" content="#3b82f6" />
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <AuthProvider>
           <ClassProvider>
