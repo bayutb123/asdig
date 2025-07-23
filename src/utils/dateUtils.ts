@@ -4,31 +4,6 @@
  */
 
 /**
- * Format date to Indonesian locale (used internally)
- * @param date - Date string or Date object
- * @param options - Intl.DateTimeFormat options
- */
-const formatDateIndonesian = (
-  date: string | Date,
-  options: Intl.DateTimeFormatOptions = {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  }
-): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-
-  // Validate date
-  if (isNaN(dateObj.getTime())) {
-    console.warn('Invalid date provided to formatDateIndonesian:', date);
-    return 'Tanggal tidak valid';
-  }
-
-  return dateObj.toLocaleDateString('id-ID', options);
-};
-
-/**
  * Get date range between two dates (inclusive)
  * @param startDate - Start date in YYYY-MM-DD format
  * @param endDate - End date in YYYY-MM-DD format
@@ -70,5 +45,3 @@ export const getDateRange = (
 
   return dates;
 };
-
-

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Teacher, Admin, validateUserCredentials, isAdmin, isTeacher } from '@/data/classesData';
+import { trackAuthEvent } from '@/lib/analytics';
 
 interface AuthContextType {
   user: User | null;
@@ -83,10 +84,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = (username: string, password: string): boolean => {
     try {
+      // Track login attempt
+      trackAuthEvent('login_attempt', undefined, { username });
+
       const userData = validateUserCredentials(username, password);
 
       if (userData) {
         setUser(userData);
+
+        const userRole = isAdmin(userData) ? 'admin' : isTeacher(userData) ? 'teacher' : 'guest';
 
         if (isTeacher(userData)) {
           setTeacher(userData);
@@ -109,18 +115,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
+        // Track successful login
+        trackAuthEvent('login_success', userRole, {
+          username,
+          user_id: userData.id,
+          user_name: userData.name
+        });
+
         return true;
       }
 
+      // Track failed login
+      trackAuthEvent('login_failure', undefined, { username });
       return false;
     } catch (error) {
       console.error('Error during login:', error);
+      // Track login error
+      trackAuthEvent('login_failure', undefined, {
+        username,
+        error_message: error instanceof Error ? error.message : 'Unknown error'
+      });
       return false;
     }
   };
 
   const logout = () => {
     try {
+      // Track logout before clearing user data
+      const currentUserRole = admin ? 'admin' : teacher ? 'teacher' : 'guest';
+      trackAuthEvent('logout', currentUserRole, {
+        user_id: user?.id,
+        user_name: user?.name
+      });
+
       setUser(null);
       setTeacher(null);
       setAdmin(null);
