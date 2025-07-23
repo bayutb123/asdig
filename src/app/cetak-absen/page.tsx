@@ -22,8 +22,6 @@ export default function CetakAbsenPage() {
   const {
     studentsInSelectedClass,
     selectedClass,
-    selectedDate,
-    setSelectedDate,
     attendanceRecords
   } = useSupabaseClass();
   const [startDate, setStartDate] = useState('');

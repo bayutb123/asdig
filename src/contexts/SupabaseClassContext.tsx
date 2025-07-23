@@ -106,7 +106,7 @@ export function SupabaseClassProvider({ children }: ClassProviderProps) {
       console.error('Error loading students:', error);
       trackError('student_loading_error', error instanceof Error ? error.message : 'Unknown error');
     }
-  }, []);
+  }, [selectedClass]);
 
   // Load attendance records
   const refreshAttendance = useCallback(async () => {
@@ -159,21 +159,21 @@ export function SupabaseClassProvider({ children }: ClassProviderProps) {
       refreshClasses();
       refreshStudents();
     }
-  }, [user, hasTeacherAccess]);
+  }, [user, hasTeacherAccess, refreshClasses, refreshStudents]);
 
   // Load attendance when selected class or date changes
   useEffect(() => {
     if (selectedClass && selectedDate) {
       refreshAttendance();
     }
-  }, [selectedClass, selectedDate]);
+  }, [selectedClass, selectedDate, refreshAttendance]);
 
   // Set up real-time subscriptions (optional - graceful fallback if not available)
   useEffect(() => {
     if (!selectedClass) return;
 
-    let attendanceChannel: any = null;
-    let studentChannel: any = null;
+    let attendanceChannel: unknown = null;
+    let studentChannel: unknown = null;
 
     try {
       // Subscribe to attendance changes for the selected class

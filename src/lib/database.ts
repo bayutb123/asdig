@@ -434,7 +434,7 @@ export const attendanceService = {
 // Real-time subscriptions
 export const realtimeService = {
   // Subscribe to attendance changes
-  subscribeToAttendance(classId: string, callback: (payload: any) => void) {
+  subscribeToAttendance(classId: string, callback: (payload: unknown) => void) {
     return supabase
       .channel('attendance_changes')
       .on(
@@ -451,7 +451,7 @@ export const realtimeService = {
   },
 
   // Subscribe to student changes
-  subscribeToStudents(classId: string, callback: (payload: any) => void) {
+  subscribeToStudents(classId: string, callback: (payload: unknown) => void) {
     return supabase
       .channel('student_changes')
       .on(
@@ -468,7 +468,7 @@ export const realtimeService = {
   },
 
   // Unsubscribe from channel
-  unsubscribe(channel: any) {
+  unsubscribe(channel: unknown) {
     if (channel) {
       return supabase.removeChannel(channel);
     }

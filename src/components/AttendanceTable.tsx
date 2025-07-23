@@ -1,16 +1,12 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import React from 'react';
 import {useSupabaseAuth} from '@/contexts/SupabaseAuthContext';
 import {useSupabaseClass} from '@/contexts/SupabaseClassContext';
 import { LoadingPlaceholder } from './LayoutStable';
 
-interface AttendanceTableProps {
-  headingLevel?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
-}
-
-export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTableProps) {
-  const { user, hasTeacherAccess, isLoading: authLoading } = useSupabaseAuth();
+export default function AttendanceTable() {
+  const { user, isLoading: authLoading } = useSupabaseAuth();
   const {
     studentsInSelectedClass,
     attendanceForSelectedDate,

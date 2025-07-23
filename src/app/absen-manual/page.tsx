@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+
 
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSupabaseClass } from '@/contexts/SupabaseClassContext';
@@ -10,30 +10,10 @@ import Link from 'next/link';
 
 
 export default function ManualAttendancePage() {
-  const { teacher, admin, isLoading, hasTeacherAccess } = useSupabaseAuth();
-  const {
-    studentsInSelectedClass,
-    selectedClass,
-    selectedDate,
-    setSelectedDate,
-    saveAttendance,
-    isLoadingAttendance
-  } = useSupabaseClass();
+  const { teacher, isLoading, hasTeacherAccess } = useSupabaseAuth();
+  const { selectedClass } = useSupabaseClass();
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveMessage, setSaveMessage] = useState('');
 
-  // Initialize default values - Only for teachers
-  useEffect(() => {
-    if (hasTeacherAccess && teacher?.className) {
-      setSelectedClass(teacher.className);
-
-      // Set default date to latest available date
-      const availableDates = getAvailableDates();
-      const latestDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] : new Date().toISOString().split('T')[0];
-      setSelectedDate(latestDate);
-    }
-  }, [teacher, hasTeacherAccess]);
 
   // Show loading state
   if (isLoading || isLoadingAttendance) {

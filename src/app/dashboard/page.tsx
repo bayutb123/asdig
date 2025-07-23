@@ -8,7 +8,7 @@ import { StableContainer, LoadingPlaceholder } from '@/components/LayoutStable';
 import Link from 'next/link';
 
 export default function DashboardPage() {
-  const { user, teacher, admin, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useSupabaseAuth();
+  const { teacher, admin, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useSupabaseAuth();
   const router = useRouter();
 
   const handleLogout = () => {
