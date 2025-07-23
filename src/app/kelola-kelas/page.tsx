@@ -4,26 +4,48 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { useClass } from '@/contexts/ClassContext';
+import { useClasses, useDeleteClass, useCreateClass } from '@/hooks/useApi';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import type { ApiErrorResponse, FormErrors } from '@/types/api';
 
 export default function KelolaKelasPage() {
   const { user, hasAdminAccess } = useAuth();
   const router = useRouter();
-  const { classes, teachers, addNewClass, deleteClass } = useClass();
+
+  // API hooks
+  const { data: classesData, isLoading: classesLoading } = useClasses();
+  const deleteClassMutation = useDeleteClass();
+  const createClassMutation = useCreateClass();
+
+  // Local state
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean;
+    classId: string;
+    className: string;
+  }>({
+    isOpen: false,
+    classId: '',
+    className: '',
+  });
+
+  // Extract classes from API response
+  const classes = classesData?.classes || [];
 
   // Form state for adding new class
   const [newClass, setNewClass] = useState({
-    name: '',
-    level: '',
+    grade: '',
     section: 'A' as 'A' | 'B',
     teacherName: '',
     teacherNip: '',
     teacherPhone: '',
     teacherEmail: '',
-    maxStudents: 36
+    studentCount: 36
   });
+
+  // Form validation and error state
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   // Check authentication
   useEffect(() => {
@@ -35,61 +57,147 @@ export default function KelolaKelasPage() {
     setLoading(false);
   }, [user, router]);
 
-  const handleAddClass = (e: React.FormEvent) => {
+  // Form validation function
+  const validateForm = (): boolean => {
+    const errors: FormErrors = {};
+
+    if (!newClass.grade) {
+      errors.grade = 'Tingkat kelas harus dipilih';
+    }
+
+    if (!newClass.teacherName.trim()) {
+      errors.teacherName = 'Nama guru harus diisi';
+    }
+
+    if (!newClass.teacherNip.trim()) {
+      errors.teacherNip = 'NIP guru harus diisi';
+    } else if (newClass.teacherNip.length < 8) {
+      errors.teacherNip = 'NIP harus minimal 8 karakter';
+    }
+
+    if (newClass.teacherPhone && !/^[0-9+\-\s()]+$/.test(newClass.teacherPhone)) {
+      errors.teacherPhone = 'Format nomor telepon tidak valid';
+    }
+
+    if (newClass.teacherEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newClass.teacherEmail)) {
+      errors.teacherEmail = 'Format email tidak valid';
+    }
+
+    if (newClass.studentCount < 1 || newClass.studentCount > 50) {
+      errors.studentCount = 'Kapasitas siswa harus antara 1-50';
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  // Handle form submission for adding new class
+  const handleAddClass = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const className = `${newClass.level}${newClass.section}`;
-
-    // Check if class already exists
-    const existingClass = classes.find(cls => cls.name === className);
-    if (existingClass) {
-      alert(`Kelas ${className} sudah ada!`);
+    // Validate form
+    if (!validateForm()) {
       return;
     }
 
-    // Create class data
-    const classData = {
-      name: className,
-      grade: parseInt(newClass.level),
-      section: newClass.section,
-      teacherId: '', // Will be set by context
-      teacherName: newClass.teacherName,
-      studentCount: 0
-    };
+    const className = `${newClass.grade}${newClass.section}`;
 
-    // Create teacher data
-    const teacherData = {
-      name: newClass.teacherName,
-      nip: newClass.teacherNip,
-      username: `walikelas${newClass.level.toLowerCase()}${newClass.section.toLowerCase()}`,
-      password: 'password123',
-      className: className,
-      subject: 'Wali Kelas',
-      phone: newClass.teacherPhone,
-      email: newClass.teacherEmail,
-      role: 'teacher' as const
-    };
+    // Check if class already exists
+    if (classes.some(cls => cls.name === className)) {
+      setFormErrors({ general: `Kelas ${className} sudah ada!` });
+      return;
+    }
 
-    // Add new class using context
-    addNewClass(classData, teacherData);
+    try {
+      // Generate unique IDs
+      const classId = `class-${Date.now()}-${newClass.grade.toLowerCase()}${newClass.section.toLowerCase()}`;
+      const teacherId = `teacher-${Date.now()}-${newClass.grade.toLowerCase()}${newClass.section.toLowerCase()}`;
 
-    // Reset form
-    setNewClass({
-      name: '',
-      level: '',
-      section: 'A',
-      teacherName: '',
-      teacherNip: '',
-      teacherPhone: '',
-      teacherEmail: '',
-      maxStudents: 36
-    });
+      // Create class data
+      const classData = {
+        id: classId,
+        name: className,
+        grade: parseInt(newClass.grade),
+        section: newClass.section,
+        teacherId: teacherId,
+        teacherName: newClass.teacherName,
+        studentCount: newClass.studentCount,
+      };
 
-    setShowAddForm(false);
-    alert(`Kelas ${className} berhasil ditambahkan!`);
+      // Call the API to create the class
+      await createClassMutation.mutateAsync(classData);
+
+      // Reset form
+      setNewClass({
+        grade: '',
+        section: 'A',
+        teacherName: '',
+        teacherNip: '',
+        teacherPhone: '',
+        teacherEmail: '',
+        studentCount: 36
+      });
+
+      setFormErrors({});
+      setShowAddForm(false);
+      alert(`Kelas ${className} berhasil ditambahkan!`);
+
+    } catch (error) {
+      console.error('Create class error:', error);
+
+      const apiError = error as ApiErrorResponse;
+
+      // Handle specific error cases
+      if (apiError.response?.status === 409) {
+        setFormErrors({ general: `Kelas ${className} sudah ada!` });
+      } else if (apiError.response?.status === 400) {
+        setFormErrors({ general: apiError.response.data.error || 'Data tidak valid' });
+      } else {
+        setFormErrors({ general: 'Gagal menambahkan kelas. Silakan coba lagi.' });
+      }
+    }
   };
 
-  if (loading) {
+  // Delete class handlers
+  const handleDeleteClick = (classId: string, className: string) => {
+    setDeleteDialog({
+      isOpen: true,
+      classId,
+      className,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await deleteClassMutation.mutateAsync(deleteDialog.classId);
+      setDeleteDialog({ isOpen: false, classId: '', className: '' });
+      alert(`Kelas ${deleteDialog.className} berhasil dihapus!`);
+    } catch (error) {
+      console.error('Delete class error:', error);
+
+      const apiError = error as ApiErrorResponse;
+
+      // Handle specific error cases
+      if (apiError.response?.status === 409) {
+        const errorData = apiError.response.data;
+        alert(
+          `Tidak dapat menghapus kelas ${deleteDialog.className}!\n\n` +
+          `Kelas ini masih memiliki:\n` +
+          `- ${errorData.details?.studentsCount || 0} siswa\n` +
+          `- ${errorData.details?.attendanceRecordsCount || 0} catatan kehadiran\n\n` +
+          `Hapus semua siswa dan catatan kehadiran terlebih dahulu.`
+        );
+      } else {
+        alert(`Gagal menghapus kelas ${deleteDialog.className}. Silakan coba lagi.`);
+      }
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog({ isOpen: false, classId: '', className: '' });
+  };
+
+  if (loading || classesLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -198,7 +306,7 @@ export default function KelolaKelasPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               Total Guru
             </h3>
-            <p className="text-3xl font-bold text-green-600">{teachers.length}</p>
+            <p className="text-3xl font-bold text-green-600">{classes.length}</p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -288,13 +396,9 @@ export default function KelolaKelasPage() {
                         Edit
                       </button>
                       <button
-                        onClick={() => {
-                          if (confirm(`Apakah Anda yakin ingin menghapus kelas ${cls.name}?`)) {
-                            deleteClass(cls.id);
-                            alert(`Kelas ${cls.name} berhasil dihapus!`);
-                          }
-                        }}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                        onClick={() => handleDeleteClick(cls.id, cls.name)}
+                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors"
+                        title={`Hapus kelas ${cls.name}`}
                       >
                         Hapus
                       </button>
@@ -324,9 +428,11 @@ export default function KelolaKelasPage() {
                   </label>
                   <select
                     id="class-level-select"
-                    value={newClass.level}
-                    onChange={(e) => setNewClass({...newClass, level: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    value={newClass.grade}
+                    onChange={(e) => setNewClass({...newClass, grade: e.target.value})}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
+                      formErrors.grade ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
                     required
                     aria-label="Pilih tingkat kelas"
                   >
@@ -338,10 +444,13 @@ export default function KelolaKelasPage() {
                     <option value="5">Kelas 5</option>
                     <option value="6">Kelas 6</option>
                   </select>
-                  {newClass.level && newClass.section && (
+                  {formErrors.grade && (
+                    <p className="text-sm text-red-500 mt-1">{formErrors.grade}</p>
+                  )}
+                  {newClass.grade && newClass.section && (
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      Nama kelas: <strong>{newClass.level}{newClass.section}</strong>
-                      {classes.find(cls => cls.name === `${newClass.level}${newClass.section}`) && (
+                      Nama kelas: <strong>{newClass.grade}{newClass.section}</strong>
+                      {classes.find(cls => cls.name === `${newClass.grade}${newClass.section}`) && (
                         <span className="text-red-600 ml-2">⚠️ Kelas sudah ada!</span>
                       )}
                     </p>
@@ -376,10 +485,15 @@ export default function KelolaKelasPage() {
                     type="text"
                     value={newClass.teacherName}
                     onChange={(e) => setNewClass({...newClass, teacherName: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
+                      formErrors.teacherName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
                     placeholder="Contoh: Ibu Sari Dewi, S.Pd"
                     required
                   />
+                  {formErrors.teacherName && (
+                    <p className="text-sm text-red-500 mt-1">{formErrors.teacherName}</p>
+                  )}
                 </div>
 
                 <div>
@@ -390,36 +504,51 @@ export default function KelolaKelasPage() {
                     type="text"
                     value={newClass.teacherNip}
                     onChange={(e) => setNewClass({...newClass, teacherNip: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
+                      formErrors.teacherNip ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
                     placeholder="Contoh: 196805151994032001"
                     required
                   />
+                  {formErrors.teacherNip && (
+                    <p className="text-sm text-red-500 mt-1">{formErrors.teacherNip}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    No. Telepon
+                    No. Telepon (Opsional)
                   </label>
                   <input
                     type="tel"
                     value={newClass.teacherPhone}
                     onChange={(e) => setNewClass({...newClass, teacherPhone: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
+                      formErrors.teacherPhone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
                     placeholder="Contoh: 081234567890"
                   />
+                  {formErrors.teacherPhone && (
+                    <p className="text-sm text-red-500 mt-1">{formErrors.teacherPhone}</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Email
+                    Email (Opsional)
                   </label>
                   <input
                     type="email"
                     value={newClass.teacherEmail}
                     onChange={(e) => setNewClass({...newClass, teacherEmail: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
+                      formErrors.teacherEmail ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
                     placeholder="Contoh: guru@sd.sch.id"
                   />
+                  {formErrors.teacherEmail && (
+                    <p className="text-sm text-red-500 mt-1">{formErrors.teacherEmail}</p>
+                  )}
                 </div>
 
                 <div>
@@ -428,26 +557,61 @@ export default function KelolaKelasPage() {
                   </label>
                   <input
                     type="number"
-                    value={newClass.maxStudents}
-                    onChange={(e) => setNewClass({...newClass, maxStudents: parseInt(e.target.value)})}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    value={newClass.studentCount}
+                    onChange={(e) => setNewClass({...newClass, studentCount: parseInt(e.target.value) || 0})}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${
+                      formErrors.studentCount ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    }`}
                     min="1"
                     max="50"
                     required
                   />
+                  {formErrors.studentCount && (
+                    <p className="text-sm text-red-500 mt-1">{formErrors.studentCount}</p>
+                  )}
                 </div>
+
+                {/* General error message */}
+                {formErrors.general && (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                    <p className="text-sm text-red-600">{formErrors.general}</p>
+                  </div>
+                )}
 
                 <div className="flex gap-4 pt-4">
                   <button
                     type="submit"
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
+                    disabled={createClassMutation.isPending}
+                    className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+                      createClassMutation.isPending
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700'
+                    } text-white`}
                   >
-                    Tambah Kelas
+                    {createClassMutation.isPending ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Menambahkan...
+                      </>
+                    ) : (
+                      'Tambah Kelas'
+                    )}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowAddForm(false)}
-                    className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
+                    onClick={() => {
+                      setShowAddForm(false);
+                      setFormErrors({});
+                    }}
+                    disabled={createClassMutation.isPending}
+                    className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+                      createClassMutation.isPending
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-gray-600 hover:bg-gray-700'
+                    } text-white`}
                   >
                     Batal
                   </button>
@@ -456,6 +620,28 @@ export default function KelolaKelasPage() {
             </div>
           </div>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={deleteDialog.isOpen}
+          onClose={handleDeleteCancel}
+          onConfirm={handleDeleteConfirm}
+          title="Hapus Kelas"
+          message={
+            <div>
+              <p className="mb-2">
+                Apakah Anda yakin ingin menghapus kelas <strong>{deleteDialog.className}</strong>?
+              </p>
+              <p className="text-sm text-gray-600">
+                Tindakan ini tidak dapat dibatalkan. Kelas hanya dapat dihapus jika tidak memiliki siswa atau catatan kehadiran.
+              </p>
+            </div>
+          }
+          confirmText="Hapus Kelas"
+          cancelText="Batal"
+          type="danger"
+          isLoading={deleteClassMutation.isPending}
+        />
       </div>
     </div>
   );

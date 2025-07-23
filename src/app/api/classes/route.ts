@@ -169,3 +169,80 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// DELETE /api/classes - Delete class (admins only)
+export async function DELETE(request: NextRequest) {
+  try {
+    const userRole = request.headers.get('x-user-role')
+
+    if (userRole !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Admin access required' },
+        { status: 403 }
+      )
+    }
+
+    const { searchParams } = new URL(request.url)
+    const classId = searchParams.get('id')
+
+    if (!classId) {
+      return NextResponse.json(
+        { error: 'Class ID is required' },
+        { status: 400 }
+      )
+    }
+
+    // Check if class exists
+    const existingClass = await prisma.class.findUnique({
+      where: { id: classId },
+      include: {
+        _count: {
+          select: {
+            students: true,
+            attendanceRecords: true,
+          },
+        },
+      },
+    })
+
+    if (!existingClass) {
+      return NextResponse.json(
+        { error: 'Class not found' },
+        { status: 404 }
+      )
+    }
+
+    // Check if class has students or attendance records
+    const hasStudents = existingClass._count.students > 0
+    const hasAttendanceRecords = existingClass._count.attendanceRecords > 0
+
+    if (hasStudents || hasAttendanceRecords) {
+      return NextResponse.json(
+        {
+          error: 'Cannot delete class with existing students or attendance records',
+          details: {
+            studentsCount: existingClass._count.students,
+            attendanceRecordsCount: existingClass._count.attendanceRecords,
+          }
+        },
+        { status: 409 }
+      )
+    }
+
+    // Delete the class
+    await prisma.class.delete({
+      where: { id: classId },
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Class deleted successfully',
+    })
+  } catch (error) {
+    console.error('Delete class error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

@@ -1,4 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type { ApiError } from '@/types/api'
+
+// Custom API Error class
+class ApiClientError extends Error {
+  public status: number
+  public data: ApiError
+
+  constructor(status: number, data: ApiError) {
+    super(data.error || `HTTP ${status}`)
+    this.name = 'ApiClientError'
+    this.status = status
+    this.data = data
+  }
+}
 
 // Types
 interface User {
@@ -77,9 +91,9 @@ class ApiClient {
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     }
 
     if (this.token) {
@@ -92,8 +106,18 @@ class ApiClient {
     })
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Network error' }))
-      throw new Error(error.error || `HTTP ${response.status}`)
+      const errorData: ApiError = await response.json().catch(() => ({
+        error: 'Network error'
+      }))
+
+      const apiError = new ApiClientError(response.status, errorData)
+      // Add response property for backward compatibility
+      Object.defineProperty(apiError, 'response', {
+        value: { status: response.status, data: errorData },
+        enumerable: false
+      })
+
+      throw apiError
     }
 
     return response.json()
@@ -134,6 +158,12 @@ class ApiClient {
     return this.request<{ success: boolean; class: Class }>('/classes', {
       method: 'POST',
       body: JSON.stringify(classData),
+    })
+  }
+
+  async deleteClass(classId: string) {
+    return this.request<{ success: boolean; message: string }>(`/classes?id=${classId}`, {
+      method: 'DELETE',
     })
   }
 
@@ -211,11 +241,24 @@ export function useClasses() {
 
 export function useCreateClass() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (classData: Partial<Class>) => apiClient.createClass(classData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['classes'] })
+    },
+  })
+}
+
+export function useDeleteClass() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (classId: string) => apiClient.deleteClass(classId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classes'] })
+      queryClient.invalidateQueries({ queryKey: ['students'] })
+      queryClient.invalidateQueries({ queryKey: ['attendance'] })
     },
   })
 }
