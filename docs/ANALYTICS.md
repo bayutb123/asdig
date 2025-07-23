@@ -1,6 +1,6 @@
 # Analytics Implementation Guide
 
-This document describes the analytics implementation for the Absen Digital application using Vercel Analytics and Speed Insights.
+This document describes the analytics implementation for the Absen Digital application using Vercel Analytics.
 
 ## Overview
 
@@ -11,13 +11,13 @@ The analytics system provides comprehensive tracking for:
 - Class management operations
 - Report generation and printing
 - Error tracking and debugging
-- Performance monitoring
 
 ## Components
 
-### 1. Vercel Analytics & Speed Insights
+### 1. Vercel Analytics
 - **@vercel/analytics**: Tracks custom events and page views
-- **@vercel/speed-insights**: Monitors Core Web Vitals and performance metrics
+- Provides real-time user behavior insights
+- Performance monitoring capabilities
 
 ### 2. Analytics Library (`src/lib/analytics.ts`)
 Centralized analytics configuration with typed event tracking:
@@ -194,9 +194,9 @@ The analytics system automatically:
 - Error patterns and debugging information
 
 ### Performance Data
-- Core Web Vitals (via Speed Insights)
-- Page load times
 - User interaction metrics
+- Feature usage patterns
+- Error rates and debugging data
 
 ## Privacy & Security
 
@@ -226,10 +226,10 @@ Access analytics at: https://vercel.com/dashboard/analytics
    - Error rates by feature
    - User workflow patterns
 
-4. **Performance**
-   - Core Web Vitals scores
-   - Page load performance
-   - User experience metrics
+4. **Application Health**
+   - Error tracking and resolution
+   - User experience patterns
+   - Feature performance metrics
 
 ## Troubleshooting
 
