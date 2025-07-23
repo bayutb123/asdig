@@ -4,11 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { getStudentsByClass } from '@/data/studentsData';
-import {
-  getAttendanceByClassAndDateRange,
-  getAvailableDates
-} from '@/data/attendanceData';
+// Data service imports available for future use
 // Date utilities are available but not used in this component yet
 // import {
 //   getCurrentDateISO,

@@ -5,36 +5,38 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link';
-import { Student, getStudentsByClass } from '@/data/studentsData';
-import {
-  getAttendanceByClassAndDate,
-  AttendanceStatus,
-  getAvailableDates
-} from '@/data/attendanceData';
+import { Student } from '@/services/dataService';
+import { useStudents, useAttendance, useCreateAttendance } from '@/hooks/useApi';
 
 
 
 export default function ManualAttendancePage() {
-  const { teacher, admin, isLoading, hasTeacherAccess } = useAuth();
-  const [students, setStudents] = useState<Student[]>([]);
-  const [selectedDate, setSelectedDate] = useState('');
+  const { user, hasTeacherAccess } = useAuth();
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedClass, setSelectedClass] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState('');
+
+  // React Query hooks
+  const { data: studentsData, isLoading: studentsLoading } = useStudents(selectedClass);
+  const { isLoading: attendanceLoading } = useAttendance({
+    classId: selectedClass,
+    date: selectedDate
+  });
+  const _createAttendanceMutation = useCreateAttendance();
+
+  const students = studentsData?.students || [];
+  const isLoading = studentsLoading || attendanceLoading;
 
   // Initialize default values - Only for teachers
   useEffect(() => {
-    if (hasTeacherAccess && teacher?.className) {
-      setSelectedClass(teacher.className);
-
-      // Set default date to latest available date
-      const availableDates = getAvailableDates();
-      const latestDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] : new Date().toISOString().split('T')[0];
-      setSelectedDate(latestDate);
+    if (hasTeacherAccess && user?.className) {
+      setSelectedClass(user.className);
+      // Set default date to today
+      setSelectedDate(new Date().toISOString().split('T')[0]);
     }
-  }, [teacher, hasTeacherAccess]);
+  }, [user?.className, hasTeacherAccess]);
 
   // Define loadAttendanceData function
   const loadAttendanceData = useCallback(() => {
@@ -200,7 +202,7 @@ export default function ManualAttendancePage() {
   }
 
   // Redirect admin users - they don't have access to input attendance
-  if (admin || !hasTeacherAccess || !teacher) {
+  if (!hasTeacherAccess || !user) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
