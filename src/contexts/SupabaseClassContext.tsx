@@ -167,6 +167,48 @@ export function SupabaseClassProvider({ children }: ClassProviderProps) {
     }
   }, [selectedClass, selectedDate]);
 
+  // Set up real-time subscriptions (optional - graceful fallback if not available)
+  useEffect(() => {
+    if (!selectedClass) return;
+
+    let attendanceChannel: any = null;
+    let studentChannel: any = null;
+
+    try {
+      // Subscribe to attendance changes for the selected class
+      attendanceChannel = realtimeService.subscribeToAttendance(
+        selectedClass.id,
+        (payload) => {
+          console.log('Real-time attendance update:', payload);
+          // Refresh attendance data when changes occur
+          refreshAttendance();
+        }
+      );
+
+      // Subscribe to student changes for the selected class
+      studentChannel = realtimeService.subscribeToStudents(
+        selectedClass.id,
+        (payload) => {
+          console.log('Real-time student update:', payload);
+          // Refresh student data when changes occur
+          refreshStudents();
+        }
+      );
+    } catch (error) {
+      console.warn('Real-time subscriptions not available:', error);
+    }
+
+    // Cleanup subscriptions
+    return () => {
+      if (attendanceChannel) {
+        realtimeService.unsubscribe(attendanceChannel);
+      }
+      if (studentChannel) {
+        realtimeService.unsubscribe(studentChannel);
+      }
+    };
+  }, [selectedClass]);
+
   const value = {
     // Data
     classes,

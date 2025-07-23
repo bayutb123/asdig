@@ -100,15 +100,15 @@ export const userService = {
         .eq('username', username)
         .eq('is_active', true)
         .single();
-      
+
       if (error && error.code !== 'PGRST116') throw error;
-      
+
+      // For demo purposes, we're using plain text passwords
       // In production, use bcrypt.compare(password, data.password_hash)
-      // For now, we'll use a simple comparison (NOT SECURE)
       if (data && data.password_hash === password) {
         return data;
       }
-      
+
       return null;
     } catch (error) {
       handleDatabaseError(error, 'userService.validateCredentials');
@@ -469,6 +469,8 @@ export const realtimeService = {
 
   // Unsubscribe from channel
   unsubscribe(channel: any) {
-    return supabase.removeChannel(channel);
+    if (channel) {
+      return supabase.removeChannel(channel);
+    }
   },
 };
