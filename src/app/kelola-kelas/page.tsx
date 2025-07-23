@@ -5,11 +5,15 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSupabaseClass } from '@/contexts/SupabaseClassContext';
+import { userService } from '@/lib/database';
 
 export default function KelolaKelasPage() {
   const { user, hasAdminAccess } = useSupabaseAuth();
   const router = useRouter();
   const { classes } = useSupabaseClass();
+
+  // State for teachers count
+  const [teachersCount, setTeachersCount] = useState(0);
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -34,6 +38,23 @@ export default function KelolaKelasPage() {
 
     setLoading(false);
   }, [user, router]);
+
+  // Load teachers count
+  useEffect(() => {
+    const loadTeachersCount = async () => {
+      try {
+        const teachers = await userService.getTeachers();
+        setTeachersCount(teachers.length);
+      } catch (error) {
+        console.error('Error loading teachers:', error);
+        setTeachersCount(6); // Fallback to default count
+      }
+    };
+
+    if (hasAdminAccess) {
+      loadTeachersCount();
+    }
+  }, [hasAdminAccess]);
 
   const handleAddClass = (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,7 +220,7 @@ export default function KelolaKelasPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               Total Guru
             </h3>
-            <p className="text-3xl font-bold text-green-600">{teachers.length}</p>
+            <p className="text-3xl font-bold text-green-600">{teachersCount}</p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
