@@ -59,21 +59,22 @@ model Class {
 
 // Student model
 model Student {
-  id          String   @id
-  name        String
-  classId     String
-  className   String
-  nisn        String   @unique
-  gender      Gender
-  birthDate   String
-  address     String
-  parentName  String
-  parentPhone String
-  status      AttendanceStatus @default(HADIR)
-  checkInTime String?
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String           @id
+  name             String
+  classId          String
+  className        String
+  nisn             String           @unique
+  gender           Gender
+  birthDate        String
+  address          String
+  parentName       String
+  parentPhone      String
+  enrollmentStatus EnrollmentStatus @default(ACTIVE)
+  status           AttendanceStatus @default(HADIR)
+  checkInTime      String?
+  notes            String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   // Relations
   class             Class              @relation(fields: [classId], references: [id])
@@ -121,4 +122,9 @@ enum AttendanceStatus {
   TERLAMBAT
   TIDAK_HADIR
   IZIN
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  INACTIVE
 }

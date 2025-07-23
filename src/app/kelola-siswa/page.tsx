@@ -17,7 +17,7 @@ interface Student {
   address: string;
   parentName: string;
   parentPhone: string;
-  status: 'ACTIVE' | 'INACTIVE';
+  enrollmentStatus: 'ACTIVE' | 'INACTIVE';
   createdAt: string;
   updatedAt: string;
 }
@@ -57,7 +57,7 @@ export default function StudentManagementPage() {
     address: '',
     parentName: '',
     parentPhone: '',
-    status: 'ACTIVE' as 'ACTIVE' | 'INACTIVE'
+    enrollmentStatus: 'ACTIVE' as 'ACTIVE' | 'INACTIVE'
   });
 
   // Check admin access
@@ -129,7 +129,7 @@ export default function StudentManagementPage() {
       address: '',
       parentName: '',
       parentPhone: '',
-      status: 'ACTIVE'
+      enrollmentStatus: 'ACTIVE'
     });
     setEditingStudent(null);
   };
@@ -166,7 +166,7 @@ export default function StudentManagementPage() {
       address: student.address,
       parentName: student.parentName,
       parentPhone: student.parentPhone,
-      status: student.status
+      enrollmentStatus: student.enrollmentStatus
     });
     setShowForm(true);
   };
@@ -295,7 +295,7 @@ export default function StudentManagementPage() {
                     Orang Tua
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Status
+                    Status Kesiswaan
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Aksi
@@ -336,11 +336,11 @@ export default function StudentManagementPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        student.status === 'ACTIVE' 
+                        student.enrollmentStatus === 'ACTIVE'
                           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                           : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                       }`}>
-                        {student.status === 'ACTIVE' ? 'Aktif' : 'Tidak Aktif'}
+                        {student.enrollmentStatus === 'ACTIVE' ? 'Aktif' : 'Tidak Aktif'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -476,15 +476,15 @@ export default function StudentManagementPage() {
                     />
                   </div>
 
-                  {/* Status */}
+                  {/* Status Kesiswaan */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Status *
+                      Status Kesiswaan *
                     </label>
                     <select
                       required
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value as 'ACTIVE' | 'INACTIVE' })}
+                      value={formData.enrollmentStatus}
+                      onChange={(e) => setFormData({ ...formData, enrollmentStatus: e.target.value as 'ACTIVE' | 'INACTIVE' })}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     >
                       <option value="ACTIVE">Aktif</option>

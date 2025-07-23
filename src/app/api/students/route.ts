@@ -82,11 +82,10 @@ export async function GET(request: NextRequest) {
       ],
     })
 
-    // Transform data to include className and map status
+    // Transform data to include className
     const transformedStudents = students.map(student => ({
       ...student,
       className: student.class?.name || 'Tidak ada kelas',
-      status: student.status === 'HADIR' ? 'ACTIVE' : 'INACTIVE', // Map database status to frontend status
       class: undefined // Remove the nested class object
     }))
 
@@ -147,7 +146,7 @@ export async function POST(request: NextRequest) {
       address,
       parentName,
       parentPhone,
-      status = 'ACTIVE'
+      enrollmentStatus = 'ACTIVE'
     } = body
 
     // Validate required fields
@@ -198,7 +197,7 @@ export async function POST(request: NextRequest) {
         address,
         parentName,
         parentPhone,
-        status: status === 'ACTIVE' ? 'HADIR' : 'TIDAK_HADIR' // Map to existing enum
+        enrollmentStatus: enrollmentStatus
       },
       include: {
         class: {
@@ -228,7 +227,7 @@ export async function POST(request: NextRequest) {
       data: {
         ...student,
         className: student.class?.name || 'Tidak ada kelas',
-        status: student.status === 'HADIR' ? 'ACTIVE' : 'INACTIVE' // Map back for frontend
+        class: undefined // Remove the nested class object
       }
     })
   } catch (error) {

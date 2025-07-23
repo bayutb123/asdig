@@ -45,6 +45,7 @@ export interface Student {
   address: string
   parentName: string
   parentPhone: string
+  enrollmentStatus: 'ACTIVE' | 'INACTIVE'
   status: 'HADIR' | 'TERLAMBAT' | 'TIDAK_HADIR' | 'IZIN'
   checkInTime?: string
   notes?: string

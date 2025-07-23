@@ -425,11 +425,11 @@ export function useApi() {
 
   return {
     get: (endpoint: string) => makeRequest(endpoint, { method: 'GET' }),
-    post: (endpoint: string, data?: any) => makeRequest(endpoint, {
+    post: (endpoint: string, data?: unknown) => makeRequest(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     }),
-    put: (endpoint: string, data?: any) => makeRequest(endpoint, {
+    put: (endpoint: string, data?: unknown) => makeRequest(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
     }),

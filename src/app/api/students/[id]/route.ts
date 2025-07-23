@@ -44,7 +44,6 @@ export async function GET(
       data: {
         ...student,
         className: student.class?.name || 'Tidak ada kelas',
-        status: student.status === 'HADIR' ? 'ACTIVE' : 'INACTIVE',
         class: undefined // Remove the nested class object
       }
     })
@@ -84,7 +83,7 @@ export async function PUT(
       address,
       parentName,
       parentPhone,
-      status
+      enrollmentStatus
     } = body
 
     // Validate required fields
@@ -170,7 +169,7 @@ export async function PUT(
         address,
         parentName,
         parentPhone,
-        status: status === 'ACTIVE' ? 'HADIR' : 'TIDAK_HADIR'
+        enrollmentStatus: enrollmentStatus
       },
       include: {
         class: {
@@ -190,7 +189,6 @@ export async function PUT(
       data: {
         ...updatedStudent,
         className: updatedStudent.class?.name || 'Tidak ada kelas',
-        status: updatedStudent.status === 'HADIR' ? 'ACTIVE' : 'INACTIVE',
         class: undefined // Remove the nested class object
       }
     })
