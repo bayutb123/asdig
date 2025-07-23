@@ -3,6 +3,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ClassProvider } from "@/contexts/ClassContext";
+import { QueryProvider } from "@/providers/QueryProvider";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -82,13 +84,17 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased stable-container`}
         suppressHydrationWarning
       >
-        <AuthProvider>
-          <ClassProvider>
-            <div className="stable-grid min-h-screen">
-              {children}
-            </div>
-          </ClassProvider>
-        </AuthProvider>
+        <ErrorBoundary>
+          <QueryProvider>
+            <AuthProvider>
+              <ClassProvider>
+                <div className="stable-grid min-h-screen">
+                  {children}
+                </div>
+              </ClassProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
