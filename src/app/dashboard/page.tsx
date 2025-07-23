@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AttendanceTable from '@/components/AttendanceTable';
@@ -8,8 +9,15 @@ import { StableContainer, LoadingPlaceholder } from '@/components/LayoutStable';
 import Link from 'next/link';
 
 export default function DashboardPage() {
-  const { teacher, admin, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useAuth();
+  const { user, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useAuth();
   const router = useRouter();
+
+  // Redirect to login if not authenticated after loading is complete
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
+    }
+  }, [isLoading, user, router]);
 
   const handleLogout = () => {
     try {
@@ -25,7 +33,7 @@ export default function DashboardPage() {
   };
 
   // Show loading if auth is still loading or no user data is available
-  if (isLoading || (!teacher && !admin)) {
+  if (isLoading || !user) {
     return (
       <ProtectedRoute>
         <StableContainer className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
@@ -48,22 +56,22 @@ export default function DashboardPage() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {admin ? 'Dashboard Admin' : 'Dashboard Wali Kelas'}
+                {user.role === 'ADMIN' ? 'Dashboard Admin' : 'Dashboard Wali Kelas'}
               </h1>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Selamat datang, {admin?.name || teacher?.name || 'Loading...'}
+                Selamat datang, {user.name}
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {admin?.name || teacher?.name || 'Loading...'}
+                  {user.name}
                 </p>
                 <p className="text-xs text-gray-600 dark:text-gray-300">
-                  {admin ? `Admin - ${admin.position}` : `Guru Kelas ${teacher?.className || '...'}`}
+                  {user.role === 'ADMIN' ? `Admin - ${user.position || 'Administrator'}` : `Guru Kelas ${user.className || '...'}`}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  NIP: {admin?.nip || teacher?.nip || '...'}
+                  NIP: {user.nip}
                 </p>
               </div>
               <button
@@ -84,7 +92,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                {admin ? 'Informasi dan Jabatan' : 'Informasi Kelas'}
+                {user.role === 'ADMIN' ? 'Informasi dan Jabatan' : 'Informasi Kelas'}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
@@ -93,9 +101,11 @@ export default function DashboardPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H9m0 0H5m0 0h2M7 7h10M7 11h10M7 15h10" />
                     </svg>
                     <div>
-                      <p className="text-sm text-blue-600 dark:text-blue-400">Kelas</p>
+                      <p className="text-sm text-blue-600 dark:text-blue-400">
+                        {user.role === 'ADMIN' ? 'Jabatan' : 'Kelas'}
+                      </p>
                       <p className="text-lg font-semibold text-blue-800 dark:text-blue-200">
-                        {admin ? admin.position : teacher?.className || 'Loading...'}
+                        {user.role === 'ADMIN' ? user.position || 'Administrator' : user.className || 'Loading...'}
                       </p>
                     </div>
                   </div>
@@ -106,8 +116,8 @@ export default function DashboardPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                     <div>
-                      <p className="text-sm text-green-600 dark:text-green-400">{admin ? 'Admin' : 'Wali Kelas'}</p>
-                      <p className="text-lg font-semibold text-green-800 dark:text-green-200">{admin?.name || teacher?.name || 'Loading...'}</p>
+                      <p className="text-sm text-green-600 dark:text-green-400">{user.role === 'ADMIN' ? 'Admin' : 'Wali Kelas'}</p>
+                      <p className="text-lg font-semibold text-green-800 dark:text-green-200">{user.name}</p>
                     </div>
                   </div>
                 </div>
@@ -118,7 +128,7 @@ export default function DashboardPage() {
                     </svg>
                     <div>
                       <p className="text-sm text-purple-600 dark:text-purple-400">NIP</p>
-                      <p className="text-lg font-semibold text-purple-800 dark:text-purple-200">{admin?.nip || teacher?.nip || 'Loading...'}</p>
+                      <p className="text-lg font-semibold text-purple-800 dark:text-purple-200">{user.nip}</p>
                     </div>
                   </div>
                 </div>
