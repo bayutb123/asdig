@@ -79,12 +79,21 @@ interface AttendanceDataStructure {
       end: string
     }
     generatedAt: string
+    schoolDays: number
+    classes: string[]
+    studentsPerClass: number
+    totalStudents: number
+    attendancePatterns: {
+      present: number
+      late: number
+      absent: number
+      excused: number
+    }
   }
   attendanceRecords: Array<{
     id: string
     studentId: string
     studentName: string
-    classId: string
     className: string
     date: string
     status: 'Hadir' | 'Terlambat' | 'Tidak Hadir' | 'Izin'
@@ -92,8 +101,16 @@ interface AttendanceDataStructure {
     notes?: string
     reason?: string
   }>
-  students: any[]
-  teachers: any[]
+  students: Array<{
+    id: string
+    name: string
+    className: string
+    nisn: string
+    gender: string
+  }>
+  teachers: {
+    [className: string]: string
+  }
   excuseReasons: string[]
 }
 
@@ -104,7 +121,7 @@ async function migrateData() {
     // Load JSON data
     const classesData = classesDataJSON as ClassesDataStructure
     const studentsData = studentsDataJSON as StudentsDataStructure
-    const attendanceData = attendanceDataJSON as AttendanceDataStructure
+    const attendanceData = attendanceDataJSON as unknown as AttendanceDataStructure
 
     console.log('📊 Data loaded:')
     console.log(`- Classes: ${classesData.classes.length}`)
@@ -198,11 +215,13 @@ async function migrateData() {
           status = 'HADIR'
       }
 
+      const classId = student.class.toLowerCase().replace(/\s+/g, '') // Convert "1A" to "1a"
+
       await prisma.student.create({
         data: {
           id: student.id,
           name: student.name,
-          classId: student.class.toLowerCase().replace(/\s+/g, ''), // Convert "1A" to "1a"
+          classId: classId,
           className: student.class,
           nisn: student.nisn,
           gender: student.gender,
@@ -239,20 +258,29 @@ async function migrateData() {
           status = 'HADIR'
       }
 
-      await prisma.attendanceRecord.create({
-        data: {
-          id: record.id,
-          studentId: record.studentId,
-          studentName: record.studentName,
-          classId: record.classId,
-          className: record.className,
-          date: record.date,
-          status: status,
-          checkInTime: record.checkInTime,
-          notes: record.notes,
-          reason: record.reason,
-        },
-      })
+      // Convert className to classId format
+      const classId = record.className.toLowerCase().replace(/\s+/g, '') // Convert "1A" to "1a"
+
+      try {
+        await prisma.attendanceRecord.create({
+          data: {
+            id: record.id,
+            studentId: record.studentId,
+            studentName: record.studentName,
+            classId: classId,
+            className: record.className,
+            date: record.date,
+            status: status,
+            checkInTime: record.checkInTime,
+            notes: record.notes,
+            reason: record.reason,
+          },
+        })
+      } catch (error) {
+        console.warn(`⚠️ Skipping attendance record ${record.id} - student or class not found`)
+        // eslint-disable-next-line no-continue
+        continue
+      }
     }
 
     console.log('✅ Data migration completed successfully!')
@@ -279,6 +307,7 @@ async function migrateData() {
 }
 
 // Run migration if this file is executed directly
+/* eslint-disable @typescript-eslint/no-var-requires */
 if (require.main === module) {
   migrateData()
     .then(() => {
