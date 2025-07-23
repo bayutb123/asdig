@@ -47,10 +47,10 @@ export function preloadComponents() {
 }
 
 // Component for lazy loading with intersection observer
-export function LazyOnVisible({ 
-  children, 
+export function LazyOnVisible({
+  children,
   fallback,
-  rootMargin = '50px' 
+  rootMargin: _rootMargin = '50px'
 }: LazyWrapperProps & { rootMargin?: string }) {
   return (
     <LazyWrapper fallback={fallback}>
