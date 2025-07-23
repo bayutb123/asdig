@@ -3,8 +3,6 @@
  * Uses modern JavaScript date APIs and proper timezone handling
  */
 
-
-
 /**
  * Get date range between two dates (inclusive)
  * @param startDate - Start date in YYYY-MM-DD format
@@ -47,5 +45,3 @@ export const getDateRange = (
 
   return dates;
 };
-
-
