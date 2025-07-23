@@ -70,8 +70,9 @@ export default function KelolaKelasPage() {
       role: 'teacher' as const
     };
 
-    // Add new class using context
-    addNewClass(classData, teacherData);
+    // TODO: Implement addNewClass functionality with Supabase
+    console.log('New class data:', classData, teacherData);
+    alert('Fitur tambah kelas akan segera tersedia dengan database Supabase!');
 
     // Reset form
     setNewClass({

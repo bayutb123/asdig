@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link';
 import { Student, getStudentsByClass } from '@/data/studentsData';
@@ -15,7 +15,7 @@ import {
 
 
 export default function ManualAttendancePage() {
-  const { teacher, admin, isLoading, hasTeacherAccess } = useAuth();
+  const { teacher, admin, isLoading, hasTeacherAccess } = useSupabaseAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedClass, setSelectedClass] = useState('');

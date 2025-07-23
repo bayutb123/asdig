@@ -488,7 +488,7 @@ export default function LaporanAbsenPage() {
                   aria-label="Filter laporan berdasarkan kelas"
                 >
                   <option value="all">Semua Kelas</option>
-                  {getAllClasses().map(cls => (
+                  {classes.map(cls => (
                     <option key={cls.id} value={cls.name}>{cls.name}</option>
                   ))}
                 </select>
