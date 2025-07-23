@@ -18,7 +18,7 @@ export interface AttendanceRecord {
   recordedAt: string; // Timestamp when recorded
 }
 
-export interface AttendanceDataStructure {
+interface AttendanceDataStructure {
   metadata: {
     generatedAt: string;
     totalRecords: number;
@@ -50,34 +50,13 @@ export interface AttendanceDataStructure {
 // Load attendance data from JSON file
 const loadedData = attendanceDataJSON as AttendanceDataStructure;
 
-// Export the attendance records from JSON
-export const attendanceData: AttendanceRecord[] = loadedData.attendanceRecords;
-
-// Export metadata and other data
-export const attendanceMetadata = loadedData.metadata;
-export const studentsData = loadedData.students;
-export const teachersData = loadedData.teachers;
-export const excuseReasonsData = loadedData.excuseReasons;
+// Internal data arrays (not exported)
+const attendanceData: AttendanceRecord[] = loadedData.attendanceRecords;
+const attendanceMetadata = loadedData.metadata;
 
 // Helper functions for data access
-export const getAttendanceByDate = (date: string): AttendanceRecord[] => {
-  return attendanceData.filter(record => record.date === date);
-};
-
-export const getAttendanceByClass = (className: string): AttendanceRecord[] => {
-  return attendanceData.filter(record => record.className === className);
-};
-
 export const getAttendanceByClassAndDate = (className: string, date: string): AttendanceRecord[] => {
   return attendanceData.filter(record => record.className === className && record.date === date);
-};
-
-export const getAttendanceByDateRange = (startDate: string, endDate: string): AttendanceRecord[] => {
-  return attendanceData.filter(record => record.date >= startDate && record.date <= endDate);
-};
-
-export const getAttendanceByStudent = (studentId: string): AttendanceRecord[] => {
-  return attendanceData.filter(record => record.studentId === studentId);
 };
 
 export const getAttendanceByClassAndDateRange = (className: string, startDate: string, endDate: string): AttendanceRecord[] => {
@@ -88,56 +67,7 @@ export const getAttendanceByClassAndDateRange = (className: string, startDate: s
   );
 };
 
-// Get attendance data for the last N days
-export const getAttendanceForLastDays = (days: number = 30): AttendanceRecord[] => {
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - days);
 
-  // Use modern date formatting (more reliable than toISOString().split())
-  const startDateStr = startDate.toLocaleDateString('sv-SE');
-  const endDateStr = endDate.toLocaleDateString('sv-SE');
-
-  return getAttendanceByDateRange(startDateStr, endDateStr);
-};
-
-// Get attendance data for the last 30 days (convenience function)
-export const getAttendanceForLast30Days = (): AttendanceRecord[] => {
-  return getAttendanceForLastDays(30);
-};
-
-// Get attendance data for the last N days by class
-export const getAttendanceForLastDaysByClass = (className: string, days: number = 30): AttendanceRecord[] => {
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(endDate.getDate() - days);
-
-  // Use modern date formatting (more reliable than toISOString().split())
-  const startDateStr = startDate.toLocaleDateString('sv-SE');
-  const endDateStr = endDate.toLocaleDateString('sv-SE');
-
-  return getAttendanceByClassAndDateRange(className, startDateStr, endDateStr);
-};
-
-// Statistics helper functions
-export const calculateAttendanceStats = (records: AttendanceRecord[]) => {
-  const total = records.length;
-  const present = records.filter(r => r.status === 'Hadir').length;
-  const late = records.filter(r => r.status === 'Terlambat').length;
-  const absent = records.filter(r => r.status === 'Tidak Hadir').length;
-  const excused = records.filter(r => r.status === 'Izin').length;
-
-  const attendanceRate = total > 0 ? ((present + late) / total) * 100 : 0;
-
-  return {
-    total,
-    present,
-    late,
-    absent,
-    excused,
-    attendanceRate: Math.round(attendanceRate * 100) / 100
-  };
-};
 
 // Calculate statistics based on unique students (for class summaries)
 export const calculateClassAttendanceStats = (records: AttendanceRecord[]) => {
@@ -202,40 +132,7 @@ export const getAvailableDates = (): string[] => {
   return dates.sort();
 };
 
-// Get attendance summary by date
-export const getAttendanceSummaryByDate = (date: string) => {
-  const dayRecords = getAttendanceByDate(date);
-  const classSummaries = [];
 
-  // Get unique class names from metadata instead of hardcoding
-  const classes = attendanceMetadata.classes;
-
-  for (const className of classes) {
-    const classRecords = dayRecords.filter(r => r.className === className);
-    const stats = calculateAttendanceStats(classRecords);
-
-    classSummaries.push({
-      className,
-      date,
-      ...stats
-    });
-  }
-
-  return classSummaries;
-};
-
-// Get attendance summary by class for date range
-export const getAttendanceSummaryByClass = (className: string, startDate: string, endDate: string) => {
-  const classRecords = getAttendanceByClassAndDateRange(className, startDate, endDate);
-  const stats = calculateAttendanceStats(classRecords);
-  
-  return {
-    className,
-    startDate,
-    endDate,
-    ...stats
-  };
-};
 
 console.log(`Loaded ${attendanceData.length} attendance records from JSON data (Last 30 days)`);
 console.log(`Date range: ${attendanceMetadata.dateRange.start} to ${attendanceMetadata.dateRange.end}`);

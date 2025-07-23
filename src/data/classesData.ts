@@ -41,7 +41,7 @@ export interface Admin {
 
 export type User = Teacher | Admin;
 
-export interface ClassesDataStructure {
+interface ClassesDataStructure {
   metadata: {
     totalClasses: number;
     totalTeachers: number;
@@ -56,14 +56,13 @@ export interface ClassesDataStructure {
 // Load classes data from JSON file
 const loadedData = classesDataJSON as ClassesDataStructure;
 
-// Export the data from JSON
-export const classesData: ClassInfo[] = loadedData.classes;
-export const teachersData: Teacher[] = loadedData.teachers;
-export const adminsData: Admin[] = loadedData.admins;
-export const classesMetadata = loadedData.metadata;
+// Internal data arrays (not exported)
+const classesData: ClassInfo[] = loadedData.classes;
+const teachersData: Teacher[] = loadedData.teachers;
+const adminsData: Admin[] = loadedData.admins;
 
-// Combined users for authentication
-export const allUsersData: User[] = [...teachersData, ...adminsData];
+// Combined users for authentication (internal use only)
+const allUsersData: User[] = [...teachersData, ...adminsData];
 
 // Helper functions
 export const getAllClasses = (): ClassInfo[] => {
@@ -78,33 +77,7 @@ export const getAllAdmins = (): Admin[] => {
   return adminsData;
 };
 
-export const getClassById = (id: string): ClassInfo | undefined => {
-  return classesData.find(cls => cls.id === id);
-};
-
-export const getTeacherById = (id: string): Teacher | undefined => {
-  return teachersData.find(teacher => teacher.id === id);
-};
-
-export const getAdminById = (id: string): Admin | undefined => {
-  return adminsData.find(admin => admin.id === id);
-};
-
-export const getUserById = (id: string): User | undefined => {
-  return allUsersData.find(user => user.id === id);
-};
-
-// Authentication helper functions
-export const validateTeacherCredentials = (username: string, password: string): Teacher | null => {
-  const teacher = teachersData.find(t => t.username === username && t.password === password);
-  return teacher || null;
-};
-
-export const validateAdminCredentials = (username: string, password: string): Admin | null => {
-  const admin = adminsData.find(a => a.username === username && a.password === password);
-  return admin || null;
-};
-
+// Authentication helper function
 export const validateUserCredentials = (username: string, password: string): User | null => {
   const user = allUsersData.find(u => u.username === username && u.password === password);
   return user || null;
