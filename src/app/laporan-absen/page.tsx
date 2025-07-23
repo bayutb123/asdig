@@ -4,12 +4,7 @@ import {useState, useEffect, useCallback} from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { getAllClasses } from '@/data/classesData';
-import {
-  getAttendanceByClassAndDateRange,
-  calculateClassAttendanceStats,
-  getAvailableDates
-} from '@/data/attendanceData';
+import { useClasses, useAttendance } from '@/hooks/useApi';
 
 interface AttendanceReport {
   date: string;
@@ -23,14 +18,27 @@ interface AttendanceReport {
 }
 
 export default function LaporanAbsenPage() {
-  const { user, teacher, admin, hasAdminAccess, hasTeacherAccess } = useAuth();
+  const { user, hasAdminAccess, hasTeacherAccess } = useAuth();
   const router = useRouter();
+
+  // React Query hooks for data fetching
+  const { data: classesData, isLoading: classesLoading } = useClasses();
+  const classes = classesData?.classes || [];
+
   const [loading, setLoading] = useState(true);
+  const isLoading = loading || classesLoading;
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [selectedDateRange, setSelectedDateRange] = useState<string>('today');
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
+  const [startDate, setStartDate] = useState<string>('2025-07-21');
+  const [endDate, setEndDate] = useState<string>('2025-07-21');
   const [reports, setReports] = useState<AttendanceReport[]>([]);
+
+  // Fetch attendance data for the selected date range (conditionally enabled)
+  const { data: attendanceData } = useAttendance({
+    startDate: startDate,
+    endDate: endDate,
+    enabled: Boolean(startDate && endDate)
+  });
 
   // Check authentication
   useEffect(() => {
@@ -40,28 +48,26 @@ export default function LaporanAbsenPage() {
     }
     
     // Set default class for teachers
-    if (hasTeacherAccess && teacher?.className) {
-      setSelectedClass(teacher.className);
+    if (hasTeacherAccess && user?.className) {
+      setSelectedClass(user.className);
     }
     
-    // Set default date to latest available date from attendance data
-    const availableDates = getAvailableDates();
-    const latestDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] :
-      new Date().toLocaleDateString('sv-SE'); // Modern ISO date format (YYYY-MM-DD)
-    setStartDate(latestDate);
-    setEndDate(latestDate);
+    // Set default date to a date range that has data (based on migration data)
+    const defaultEndDate = '2025-07-21'; // Last date with data
+    const defaultStartDate = '2025-07-21'; // Same date for single day report
+    setStartDate(defaultStartDate);
+    setEndDate(defaultEndDate);
     
     setLoading(false);
-  }, [user, teacher, hasTeacherAccess, router]);
+  }, [user, hasTeacherAccess, router]);
 
   // Define generateReports function
   const generateReports = useCallback(() => {
-    const classes = getAllClasses();
-
+    // Use classes from React Query hook
     // Filter classes based on selection and user role
     let targetClasses = classes;
-    if (hasTeacherAccess && teacher?.className) {
-      targetClasses = classes.filter(cls => cls.name === teacher.className);
+    if (hasTeacherAccess && user?.className) {
+      targetClasses = classes.filter(cls => cls.name === user.className);
     } else if (selectedClass !== 'all') {
       targetClasses = classes.filter(cls => cls.name === selectedClass);
     }
@@ -88,28 +94,50 @@ export default function LaporanAbsenPage() {
       reportEndDate = monthEnd.toISOString().split('T')[0];
     }
 
-    // Generate reports for each class using centralized attendance data
+    // Generate reports for each class using real attendance data
     const generatedReports: AttendanceReport[] = targetClasses.map(cls => {
       // Get attendance data for this class and date range
-      const attendanceRecords = getAttendanceByClassAndDateRange(cls.name, reportStartDate, reportEndDate);
+      const allAttendanceRecords = attendanceData?.attendanceRecords || [];
+      const classAttendanceRecords = allAttendanceRecords.filter(record =>
+        record.className === cls.name &&
+        record.date >= reportStartDate &&
+        record.date <= reportEndDate
+      );
 
-      // Calculate statistics using the class-specific helper function
-      const stats = calculateClassAttendanceStats(attendanceRecords);
+      // Calculate statistics from real data
+      const totalStudents = cls.studentCount || 0;
+      const totalPresent = classAttendanceRecords.filter(r => r.status === 'HADIR').length;
+      const totalLate = classAttendanceRecords.filter(r => r.status === 'TERLAMBAT').length;
+      const totalAbsent = classAttendanceRecords.filter(r => r.status === 'TIDAK_HADIR').length;
+      const totalExcused = classAttendanceRecords.filter(r => r.status === 'IZIN').length;
+
+      // Calculate attendance rate
+      const totalRecorded = totalPresent + totalLate + totalAbsent + totalExcused;
+      const attendanceRate = totalRecorded > 0 ? Math.round(((totalPresent + totalLate) / totalRecorded) * 100) : 0;
+
+      const stats = {
+        totalStudents,
+        totalPresent,
+        totalAbsent,
+        totalLate,
+        totalExcused,
+        attendanceRate
+      };
 
       return {
         date: reportStartDate === reportEndDate ? reportStartDate : `${reportStartDate} - ${reportEndDate}`,
-        className: cls.name,
-        totalStudents: stats.totalStudents,
-        present: stats.present,
-        late: stats.late,
-        absent: stats.absent,
-        excused: stats.excused,
-        attendanceRate: stats.attendanceRate
+        className: cls.name || 'Unknown',
+        totalStudents: stats.totalStudents || 0,
+        present: stats.totalPresent || 0,
+        late: stats.totalLate || 0,
+        absent: stats.totalAbsent || 0,
+        excused: stats.totalExcused || 0,
+        attendanceRate: stats.attendanceRate || 0
       };
     });
 
     setReports(generatedReports);
-  }, [selectedClass, hasTeacherAccess, teacher, selectedDateRange, startDate, endDate]);
+  }, [selectedClass, hasTeacherAccess, user, selectedDateRange, startDate, endDate, classes, attendanceData]);
 
   // Generate attendance reports
   useEffect(() => {
@@ -174,16 +202,16 @@ export default function LaporanAbsenPage() {
 
     // Calculate totals for summary
     const totalStudents = selectedClass !== 'all' && reports.length === 1
-      ? reports[0].totalStudents
-      : reports.reduce((sum, report) => sum + report.totalStudents, 0);
+      ? (reports[0]?.totalStudents || 0)
+      : reports.reduce((sum, report) => sum + (report?.totalStudents || 0), 0);
     const avgPresent = reports.length > 0
-      ? reports.reduce((sum, report) => sum + report.present, 0) / reports.length
+      ? Math.round((reports.reduce((sum, report) => sum + (report?.present || 0), 0) / reports.length) * 100) / 100
       : 0;
     const avgAbsent = reports.length > 0
-      ? reports.reduce((sum, report) => sum + report.absent, 0) / reports.length
+      ? Math.round((reports.reduce((sum, report) => sum + (report?.absent || 0), 0) / reports.length) * 100) / 100
       : 0;
     const avgAttendanceRate = reports.length > 0
-      ? Math.round((reports.reduce((sum, report) => sum + report.attendanceRate, 0) / reports.length) * 100) / 100
+      ? Math.round((reports.reduce((sum, report) => sum + (report?.attendanceRate || 0), 0) / reports.length) * 100) / 100
       : 0;
 
     // Create the print content
@@ -435,7 +463,7 @@ export default function LaporanAbsenPage() {
                 Laporan Absensi
               </h1>
               <p className="text-gray-600 dark:text-gray-300 mt-2">
-                {admin ? `Admin - ${admin.name}` : teacher ? `Kelas ${teacher.className} - ${teacher.name}` : 'Loading...'}
+                {user?.role === 'ADMIN' ? `Admin - ${user.name}` : user?.role === 'TEACHER' ? `Kelas ${user.className} - ${user.name}` : 'Loading...'}
               </p>
             </div>
             <div className="flex gap-4">
@@ -487,7 +515,7 @@ export default function LaporanAbsenPage() {
                   aria-label="Filter laporan berdasarkan kelas"
                 >
                   <option value="all">Semua Kelas</option>
-                  {getAllClasses().map(cls => (
+                  {classes.map(cls => (
                     <option key={cls.id} value={cls.name}>{cls.name}</option>
                   ))}
                 </select>
@@ -549,8 +577,8 @@ export default function LaporanAbsenPage() {
             </h3>
             <p className="text-3xl font-bold text-blue-600">
               {selectedClass !== 'all' && reports.length === 1
-                ? reports[0].totalStudents
-                : reports.reduce((sum, report) => sum + report.totalStudents, 0)}
+                ? (reports[0]?.totalStudents || 0)
+                : reports.reduce((sum, report) => sum + (report?.totalStudents || 0), 0)}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
@@ -559,7 +587,7 @@ export default function LaporanAbsenPage() {
             </h3>
             <p className="text-3xl font-bold text-green-600">
               {reports.length > 0
-                ? reports.reduce((sum, report) => sum + report.present, 0) / reports.length
+                ? Math.round((reports.reduce((sum, report) => sum + (report.present || 0), 0) / reports.length) * 100) / 100
                 : 0}
             </p>
           </div>
@@ -569,7 +597,7 @@ export default function LaporanAbsenPage() {
             </h3>
             <p className="text-3xl font-bold text-red-600">
               {reports.length > 0
-                ? reports.reduce((sum, report) => sum + report.absent, 0) / reports.length
+                ? Math.round((reports.reduce((sum, report) => sum + (report?.absent || 0), 0) / reports.length) * 100) / 100
                 : 0}
             </p>
           </div>
@@ -579,7 +607,7 @@ export default function LaporanAbsenPage() {
             </h3>
             <p className="text-3xl font-bold text-purple-600">
               {reports.length > 0 ?
-                Math.round((reports.reduce((sum, report) => sum + report.attendanceRate, 0) / reports.length) * 100) / 100
+                Math.round((reports.reduce((sum, report) => sum + (report?.attendanceRate || 0), 0) / reports.length) * 100) / 100
                 : 0}%
             </p>
           </div>
