@@ -5,7 +5,7 @@
 
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { classService, studentService, attendanceService, realtimeService, type Class, type Student, type AttendanceRecord } from '@/lib/database';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { trackError } from '@/lib/analytics';
@@ -68,7 +68,7 @@ export function SupabaseClassProvider({ children }: ClassProviderProps) {
   );
 
   // Load classes based on user role
-  const refreshClasses = async () => {
+  const refreshClasses = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -94,10 +94,10 @@ export function SupabaseClassProvider({ children }: ClassProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   // Load students
-  const refreshStudents = async () => {
+  const refreshStudents = useCallback(async () => {
     try {
       const studentData = await studentService.getAll();
       setStudents(studentData);
@@ -105,10 +105,10 @@ export function SupabaseClassProvider({ children }: ClassProviderProps) {
       console.error('Error loading students:', error);
       trackError('student_loading_error', error instanceof Error ? error.message : 'Unknown error');
     }
-  };
+  }, []);
 
   // Load attendance records
-  const refreshAttendance = async () => {
+  const refreshAttendance = useCallback(async () => {
     if (!selectedClass) return;
     
     try {
@@ -127,7 +127,7 @@ export function SupabaseClassProvider({ children }: ClassProviderProps) {
     } finally {
       setIsLoadingAttendance(false);
     }
-  };
+  }, [selectedClass, selectedDate]);
 
   // Save attendance records
   const saveAttendance = async (records: Omit<AttendanceRecord, 'id' | 'created_at' | 'updated_at'>[]): Promise<boolean> => {
@@ -207,7 +207,7 @@ export function SupabaseClassProvider({ children }: ClassProviderProps) {
         realtimeService.unsubscribe(studentChannel);
       }
     };
-  }, [selectedClass]);
+  }, [selectedClass, refreshAttendance, refreshStudents]);
 
   const value = {
     // Data

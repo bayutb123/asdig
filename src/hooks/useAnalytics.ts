@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { usePathname } from 'next/navigation';
 import {
   trackEvent,
@@ -24,7 +24,7 @@ import {
  * Automatically tracks page views and provides tracking functions
  */
 export const useAnalytics = () => {
-  const { user, admin, teacher } = useAuth();
+  const { user, admin, teacher } = useSupabaseAuth();
   const pathname = usePathname();
 
   // Determine user role for analytics

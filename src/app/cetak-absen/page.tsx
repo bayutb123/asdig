@@ -3,12 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseClass } from '@/contexts/SupabaseClassContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { getStudentsByClass } from '@/data/studentsData';
-import {
-  getAttendanceByClassAndDateRange,
-  getAvailableDates
-} from '@/data/attendanceData';
 
 interface StudentAttendanceData {
   studentId: string;
@@ -23,6 +19,13 @@ interface StudentAttendanceData {
 
 export default function CetakAbsenPage() {
   const { teacher, admin, hasTeacherAccess } = useSupabaseAuth();
+  const {
+    studentsInSelectedClass,
+    selectedClass,
+    selectedDate,
+    setSelectedDate,
+    attendanceRecords
+  } = useSupabaseClass();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(true);

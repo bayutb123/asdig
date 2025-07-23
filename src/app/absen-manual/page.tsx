@@ -3,19 +3,22 @@
 import { useState, useEffect, useCallback } from 'react';
 
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseClass } from '@/contexts/SupabaseClassContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Link from 'next/link';
-import { Student, getStudentsByClass } from '@/data/studentsData';
-import {
-  getAttendanceByClassAndDate,
-  AttendanceStatus,
-  getAvailableDates
-} from '@/data/attendanceData';
 
 
 
 export default function ManualAttendancePage() {
   const { teacher, admin, isLoading, hasTeacherAccess } = useSupabaseAuth();
+  const {
+    studentsInSelectedClass,
+    selectedClass,
+    selectedDate,
+    setSelectedDate,
+    saveAttendance,
+    isLoadingAttendance
+  } = useSupabaseClass();
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedClass, setSelectedClass] = useState('');

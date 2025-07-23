@@ -5,11 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useSupabaseClass } from '@/contexts/SupabaseClassContext';
-import {
-  getAttendanceByClassAndDateRange,
-  calculateClassAttendanceStats,
-  getAvailableDates
-} from '@/data/attendanceData';
+import { attendanceService } from '@/lib/database';
 
 interface AttendanceReport {
   date: string;
@@ -45,18 +41,16 @@ export default function LaporanAbsenPage() {
       setSelectedClass(teacher.className);
     }
     
-    // Set default date to latest available date from attendance data
-    const availableDates = getAvailableDates();
-    const latestDate = availableDates.length > 0 ? availableDates[availableDates.length - 1] :
-      new Date().toLocaleDateString('sv-SE'); // Modern ISO date format (YYYY-MM-DD)
-    setStartDate(latestDate);
-    setEndDate(latestDate);
+    // Set default date to today
+    const today = new Date().toLocaleDateString('sv-SE'); // Modern ISO date format (YYYY-MM-DD)
+    setStartDate(today);
+    setEndDate(today);
     
     setLoading(false);
   }, [user, teacher, hasTeacherAccess, router]);
 
   // Define generateReports function
-  const generateReports = useCallback(() => {
+  const generateReports = useCallback(async () => {
     // Use classes from Supabase context
 
     // Filter classes based on selection and user role
@@ -89,34 +83,34 @@ export default function LaporanAbsenPage() {
       reportEndDate = monthEnd.toISOString().split('T')[0];
     }
 
-    // Generate reports for each class using centralized attendance data
-    const generatedReports: AttendanceReport[] = targetClasses.map(cls => {
-      // Get attendance data for this class and date range
-      const attendanceRecords = getAttendanceByClassAndDateRange(cls.name, reportStartDate, reportEndDate);
-
-      // Calculate statistics using the class-specific helper function
-      const stats = calculateClassAttendanceStats(attendanceRecords);
+    // Generate reports for each class using Supabase data
+    const generatedReports: AttendanceReport[] = await Promise.all(targetClasses.map(async (cls) => {
+      // Get attendance statistics from Supabase
+      const stats = await attendanceService.calculateClassStats(cls.id, reportStartDate, reportEndDate);
 
       return {
         date: reportStartDate === reportEndDate ? reportStartDate : `${reportStartDate} - ${reportEndDate}`,
         className: cls.name,
-        totalStudents: stats.totalStudents,
+        totalStudents: stats.total,
         present: stats.present,
         late: stats.late,
         absent: stats.absent,
         excused: stats.excused,
         attendanceRate: stats.attendanceRate
       };
-    });
+    }));
 
     setReports(generatedReports);
   }, [selectedClass, hasTeacherAccess, teacher, selectedDateRange, startDate, endDate]);
 
   // Generate attendance reports
   useEffect(() => {
-    if (!loading) {
-      generateReports();
-    }
+    const loadReports = async () => {
+      if (!loading) {
+        await generateReports();
+      }
+    };
+    loadReports();
   }, [selectedClass, selectedDateRange, startDate, endDate, loading, generateReports]);
 
   const exportToCSV = () => {
