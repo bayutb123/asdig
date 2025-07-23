@@ -6,7 +6,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { userService, type User } from '@/lib/database';
+import { userService } from '@/lib/database';
+import { type User } from '@/lib/supabase';
 import { trackAuthEvent } from '@/lib/analytics';
 
 interface AuthContextType {

@@ -101,7 +101,7 @@ export default function LaporanAbsenPage() {
     }));
 
     setReports(generatedReports);
-  }, [selectedClass, hasTeacherAccess, teacher, selectedDateRange, startDate, endDate]);
+  }, [selectedClass, hasTeacherAccess, teacher, selectedDateRange, startDate, endDate, classes]);
 
   // Generate attendance reports
   useEffect(() => {

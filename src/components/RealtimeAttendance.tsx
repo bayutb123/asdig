@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import { useSupabaseClass } from '@/contexts/SupabaseClassContext';
 import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { type AttendanceRecord } from '@/lib/database';
+import { type AttendanceRecord } from '@/lib/supabase';
 
 interface AttendanceFormData {
   studentId: string;

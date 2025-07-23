@@ -6,7 +6,8 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { classService, studentService, attendanceService, realtimeService, type Class, type Student, type AttendanceRecord } from '@/lib/database';
+import { classService, studentService, attendanceService, realtimeService } from '@/lib/database';
+import { type Class, type Student, type AttendanceRecord } from '@/lib/supabase';
 import { useSupabaseAuth } from './SupabaseAuthContext';
 import { trackError } from '@/lib/analytics';
 
