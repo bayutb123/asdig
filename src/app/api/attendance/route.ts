@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate')
     const studentId = searchParams.get('studentId')
 
-    let whereClause: any = {}
+    const whereClause: Record<string, unknown> = {}
 
     // Build where clause based on user role and filters
     if (userRole === 'TEACHER' && userClassId) {
