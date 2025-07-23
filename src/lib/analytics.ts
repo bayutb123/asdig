@@ -221,7 +221,7 @@ export const analyticsConfig = {
 };
 
 // Export default analytics utilities
-export default {
+const analyticsUtils = {
   trackEvent,
   trackPageView,
   trackAuthEvent,
@@ -232,3 +232,5 @@ export default {
   getSessionId,
   config: analyticsConfig,
 };
+
+export default analyticsUtils;

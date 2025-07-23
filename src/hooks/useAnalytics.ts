@@ -49,10 +49,10 @@ export const useAnalytics = () => {
   }, [pathname, user, getUserRole]);
 
   // Wrapped tracking functions with user context
-  const track = useCallback((event: AnalyticsEvent, properties?: Record<string, any>) => {
+  const track = useCallback((event: AnalyticsEvent, properties?: Record<string, string | number | boolean | undefined>) => {
     const userRole = getUserRole();
     const sessionId = getSessionId();
-    
+
     trackEvent(event, {
       ...properties,
       user_role: userRole,
@@ -64,7 +64,7 @@ export const useAnalytics = () => {
 
   const trackAuth = useCallback((
     eventType: 'login_attempt' | 'login_success' | 'login_failure' | 'logout',
-    additionalProps?: Record<string, any>
+    additionalProps?: Record<string, string | number | boolean | undefined>
   ) => {
     const userRole = getUserRole();
     trackAuthEvent(eventType, userRole, {
@@ -77,7 +77,7 @@ export const useAnalytics = () => {
   const trackAttendance = useCallback((
     eventType: 'attendance_view' | 'attendance_manual_entry' | 'attendance_save',
     className?: string,
-    additionalProps?: Record<string, any>
+    additionalProps?: Record<string, string | number | boolean | undefined>
   ) => {
     const userRole = getUserRole();
     trackAttendanceEvent(eventType, className, userRole, {
@@ -91,7 +91,7 @@ export const useAnalytics = () => {
   const trackClassManagement = useCallback((
     eventType: 'class_management_view' | 'class_add' | 'class_delete',
     className?: string,
-    additionalProps?: Record<string, any>
+    additionalProps?: Record<string, string | number | boolean | undefined>
   ) => {
     const userRole = getUserRole();
     trackClassManagementEvent(eventType, className, userRole, {
@@ -105,7 +105,7 @@ export const useAnalytics = () => {
   const trackReport = useCallback((
     eventType: 'report_generate' | 'report_print',
     reportType?: string,
-    additionalProps?: Record<string, any>
+    additionalProps?: Record<string, string | number | boolean | undefined>
   ) => {
     const userRole = getUserRole();
     trackReportEvent(eventType, reportType, userRole, {
@@ -119,7 +119,7 @@ export const useAnalytics = () => {
   const trackErrorEvent = useCallback((
     errorType: string,
     errorMessage?: string,
-    additionalProps?: Record<string, any>
+    additionalProps?: Record<string, string | number | boolean | undefined>
   ) => {
     trackError(errorType, errorMessage, pathname, {
       ...additionalProps,
@@ -132,7 +132,7 @@ export const useAnalytics = () => {
   // Convenience function for tracking button clicks
   const trackButtonClick = useCallback((
     buttonName: string,
-    additionalProps?: Record<string, any>
+    additionalProps?: Record<string, string | number | boolean | undefined>
   ) => {
     track('page_view', {
       feature_used: 'button_click',
@@ -145,7 +145,7 @@ export const useAnalytics = () => {
   const trackFormSubmit = useCallback((
     formName: string,
     success: boolean,
-    additionalProps?: Record<string, any>
+    additionalProps?: Record<string, string | number | boolean | undefined>
   ) => {
     track('page_view', {
       feature_used: 'form_submit',

@@ -4,7 +4,6 @@
  */
 
 import { ReactNode } from 'react';
-import Image from 'next/image';
 
 interface StableContainerProps {
   children: ReactNode;
