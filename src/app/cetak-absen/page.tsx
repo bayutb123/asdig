@@ -47,57 +47,56 @@ export default function CetakAbsenPage() {
     }
   }, [teacher, hasTeacherAccess]);
 
-  // Define loadAttendanceData function
-  const loadAttendanceData = useCallback(() => {
-    if (!teacher?.className) return;
+  // Define loadAttendanceData function using Supabase
+  const loadAttendanceData = useCallback(async () => {
+    if (!selectedClass || !startDate || !endDate) return;
 
-    // Get students for the class
-    const classStudents = getStudentsByClass(teacher.className);
-    
-    // Get attendance records for the date range
-    const attendanceRecords = getAttendanceByClassAndDateRange(teacher.className, startDate, endDate);
-    
-    // Get all dates in the range
-    const dates = getDateRange(startDate, endDate);
-    setSelectedDates(dates);
-    
-    // Process data for each student
-    const processedData: StudentAttendanceData[] = classStudents.map(student => {
-      const attendanceByDate: Record<string, {
-        status: string;
-        timeIn?: string;
-        notes?: string;
-      }> = {};
-      
-      dates.forEach(date => {
-        const record = attendanceRecords.find(r => 
-          r.studentName === student.name && r.date === date
-        );
-        
-        attendanceByDate[date] = {
-          status: record?.status || 'Tidak Hadir',
-          timeIn: record?.timeIn,
-          notes: record?.notes
+    try {
+      // Get all dates in the range
+      const dates = getDateRange(startDate, endDate);
+      setSelectedDates(dates);
+
+      // Process data for each student using Supabase data
+      const processedData: StudentAttendanceData[] = studentsInSelectedClass.map(student => {
+        const attendanceByDate: Record<string, {
+          status: string;
+          timeIn?: string;
+          notes?: string;
+        }> = {};
+
+        dates.forEach(date => {
+          // Find attendance record for this student and date
+          const record = attendanceRecords.find(r =>
+            r.student_id === student.id && r.date === date
+          );
+
+          attendanceByDate[date] = {
+            status: record?.status || 'Tidak Hadir',
+            timeIn: record?.time_in || undefined,
+            notes: record?.notes || undefined
+          };
+        });
+
+        return {
+          studentId: student.id,
+          studentName: student.name,
+          nisn: student.nisn,
+          attendanceByDate
         };
       });
-      
-      return {
-        studentId: student.id,
-        studentName: student.name,
-        nisn: student.nisn,
-        attendanceByDate
-      };
-    });
-    
-    setAttendanceData(processedData);
-  }, [teacher, startDate, endDate]);
+
+      setAttendanceData(processedData);
+    } catch (error) {
+      console.error('Error loading attendance data:', error);
+    }
+  }, [selectedClass, studentsInSelectedClass, attendanceRecords, startDate, endDate]);
 
   // Load attendance data when dates change
   useEffect(() => {
-    if (startDate && endDate && teacher?.className) {
+    if (startDate && endDate && selectedClass) {
       loadAttendanceData();
     }
-  }, [startDate, endDate, teacher, loadAttendanceData]);
+  }, [startDate, endDate, selectedClass, loadAttendanceData]);
 
   const getDateRange = (start: string, end: string): string[] => {
     const dates: string[] = [];
@@ -467,10 +466,10 @@ export default function CetakAbsenPage() {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Cetak Daftar Absensi - Kelas {teacher.className}
+                  Cetak Daftar Absensi - {selectedClass?.name || 'Pilih Kelas'}
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {teacher.name} - Cetak daftar absensi untuk beberapa hari
+                  Cetak daftar absensi untuk beberapa hari
                 </p>
               </div>
             </div>
