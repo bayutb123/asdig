@@ -1,14 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AttendanceTable from '@/components/AttendanceTable';
 import { StableContainer, LoadingPlaceholder } from '@/components/LayoutStable';
 import Link from 'next/link';
 
 export default function DashboardPage() {
-  const { teacher, admin, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useAuth();
+  const { user, teacher, admin, logout, isLoading, hasAdminAccess, hasTeacherAccess } = useSupabaseAuth();
   const router = useRouter();
 
   const handleLogout = () => {

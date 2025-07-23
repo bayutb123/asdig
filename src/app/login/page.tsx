@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { getAllTeachers, getAllAdmins } from '@/data/classesData';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -15,7 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const { login, isLoggedIn } = useAuth();
+  const { login, isLoggedIn } = useSupabaseAuth();
 
   // Redirect if already logged in
   useEffect(() => {
