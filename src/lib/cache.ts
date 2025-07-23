@@ -10,7 +10,7 @@ interface CacheItem<T> {
 }
 
 class Cache {
-  private memoryCache = new Map<string, CacheItem<any>>()
+  private memoryCache = new Map<string, CacheItem<unknown>>()
   private readonly defaultTTL = 5 * 60 * 1000 // 5 minutes
 
   /**
@@ -205,7 +205,7 @@ class Cache {
       try {
         const keys = Object.keys(localStorage).filter(key => key.startsWith('cache_'))
         localStorageSize = keys.length
-      } catch (error) {
+      } catch {
         // Ignore error
       }
     }

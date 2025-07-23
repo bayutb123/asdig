@@ -69,6 +69,10 @@ class ApiClient {
 
   setToken(token: string | null) {
     this.token = token
+    // Also try to get token from localStorage if not provided
+    if (!token && typeof window !== 'undefined') {
+      this.token = localStorage.getItem('auth-token')
+    }
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -168,6 +172,14 @@ class ApiClient {
 
 export const apiClient = new ApiClient()
 
+// Initialize API client with stored token
+if (typeof window !== 'undefined') {
+  const storedToken = localStorage.getItem('auth-token')
+  if (storedToken) {
+    apiClient.setToken(storedToken)
+  }
+}
+
 // React Query hooks
 
 // Users hooks
@@ -235,10 +247,12 @@ export function useAttendance(params?: {
   startDate?: string
   endDate?: string
   studentId?: string
+  enabled?: boolean
 }) {
   return useQuery({
     queryKey: ['attendance', params],
     queryFn: () => apiClient.getAttendance(params),
+    enabled: params?.enabled !== false,
   })
 }
 
