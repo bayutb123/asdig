@@ -1,15 +1,31 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Teacher, Admin, validateUserCredentials, isAdmin, isTeacher } from '@/data/classesData';
+import { apiClient } from '@/hooks/useApi';
+import { isTokenExpired } from '@/lib/auth';
+
+interface User {
+  id: string;
+  name: string;
+  nip: string;
+  username: string;
+  role: 'TEACHER' | 'ADMIN';
+  phone?: string;
+  email?: string;
+  classId?: string;
+  className?: string;
+  subject?: string;
+  position?: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  teacher: Teacher | null;
-  admin: Admin | null;
+  token: string | null;
   isLoggedIn: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => boolean;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
   hasAdminAccess: boolean;
@@ -20,8 +36,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [teacher, setTeacher] = useState<Teacher | null>(null);
-  const [admin, setAdmin] = useState<Admin | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -35,25 +50,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        const storedIsLoggedIn = localStorage.getItem('isLoggedIn');
+        const storedToken = localStorage.getItem('auth-token');
         const storedUser = localStorage.getItem('user');
+        const storedIsLoggedIn = localStorage.getItem('isLoggedIn');
 
-        if (storedIsLoggedIn === 'true' && storedUser) {
+        // Try new JWT-based auth first
+        if (storedToken && storedUser) {
+          try {
+            // Check if token is expired (client-side safe)
+            if (!isTokenExpired(storedToken)) {
+              const parsedUser = JSON.parse(storedUser);
+
+              // Validate parsed user data
+              if (parsedUser && typeof parsedUser === 'object' && parsedUser.id && parsedUser.role) {
+                setUser(parsedUser);
+                setToken(storedToken);
+                setIsLoggedIn(true);
+
+                // Set token in API client
+                apiClient.setToken(storedToken);
+              } else {
+                // Invalid user data, clear storage
+                localStorage.removeItem('auth-token');
+                localStorage.removeItem('user');
+              }
+            } else {
+              // Expired token, clear storage
+              localStorage.removeItem('auth-token');
+              localStorage.removeItem('user');
+            }
+          } catch (parseError) {
+            console.error('Error parsing stored auth data:', parseError);
+            // Clear corrupted data
+            localStorage.removeItem('auth-token');
+            localStorage.removeItem('user');
+          }
+        }
+        // Fallback to legacy auth for transition period
+        else if (storedIsLoggedIn === 'true' && storedUser) {
           try {
             const parsedUser = JSON.parse(storedUser);
 
-            // Validate parsed user data
+            // Validate parsed user data and convert to new format if needed
             if (parsedUser && typeof parsedUser === 'object' && parsedUser.id && parsedUser.role) {
-              setUser(parsedUser);
+              // Convert legacy format to new format if needed
+              const convertedUser = {
+                ...parsedUser,
+                role: typeof parsedUser.role === 'string' ? parsedUser.role.toUpperCase() : parsedUser.role,
+                createdAt: parsedUser.createdAt || new Date().toISOString(),
+                updatedAt: parsedUser.updatedAt || new Date().toISOString(),
+              };
 
-              if (isTeacher(parsedUser)) {
-                setTeacher(parsedUser);
-                setAdmin(null);
-              } else if (isAdmin(parsedUser)) {
-                setAdmin(parsedUser);
-                setTeacher(null);
-              }
-
+              setUser(convertedUser);
               setIsLoggedIn(true);
             } else {
               // Invalid user data, clear storage
@@ -61,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               localStorage.removeItem('user');
             }
           } catch (parseError) {
-            console.error('Error parsing stored user data:', parseError);
+            console.error('Error parsing stored legacy auth data:', parseError);
             // Clear corrupted data
             localStorage.removeItem('isLoggedIn');
             localStorage.removeItem('user');
@@ -70,9 +118,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Error checking auth:', error);
         // Clear invalid data
-        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('auth-token');
         localStorage.removeItem('user');
-        localStorage.removeItem('teacher'); // Legacy cleanup
+        // Legacy cleanup
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('teacher');
       } finally {
         setIsLoading(false);
       }
@@ -81,35 +131,77 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = (username: string, password: string): boolean => {
+  const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const userData = validateUserCredentials(username, password);
+      // Try API-based login first
+      try {
+        const response = await apiClient.login(username, password);
 
-      if (userData) {
-        setUser(userData);
+        if (response.success) {
+          setUser(response.user);
+          setToken(response.token);
+          setIsLoggedIn(true);
 
-        if (isTeacher(userData)) {
-          setTeacher(userData);
-          setAdmin(null);
-        } else if (isAdmin(userData)) {
-          setAdmin(userData);
-          setTeacher(null);
-        }
+          // Set token in API client
+          apiClient.setToken(response.token);
 
-        setIsLoggedIn(true);
+          // SSR-safe localStorage operations
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem('auth-token', response.token);
+              localStorage.setItem('user', JSON.stringify(response.user));
 
-        // SSR-safe localStorage operations
-        if (typeof window !== 'undefined') {
-          try {
-            localStorage.setItem('isLoggedIn', 'true');
-            localStorage.setItem('user', JSON.stringify(userData));
-          } catch (storageError) {
-            console.error('Error saving to localStorage:', storageError);
-            // Continue with login even if localStorage fails
+              // Legacy cleanup
+              localStorage.removeItem('isLoggedIn');
+              localStorage.removeItem('teacher');
+            } catch (storageError) {
+              console.error('Error saving to localStorage:', storageError);
+              // Continue with login even if localStorage fails
+            }
           }
-        }
 
-        return true;
+          return true;
+        }
+      } catch (apiError) {
+        console.warn('API login failed, falling back to legacy auth:', apiError);
+
+        // Fallback to legacy authentication for transition period
+        const { validateUserCredentials } = await import('@/services/dataService');
+        const userData = await validateUserCredentials(username, password);
+
+        if (userData) {
+          // Convert legacy user data to new format
+          const convertedUser = {
+            id: userData.id,
+            name: userData.name,
+            nip: userData.nip,
+            username: userData.username,
+            role: userData.role.toUpperCase() as 'TEACHER' | 'ADMIN',
+            phone: userData.phone,
+            email: userData.email,
+            classId: 'classId' in userData ? userData.classId : undefined,
+            className: 'className' in userData ? userData.className : undefined,
+            subject: 'subject' in userData ? userData.subject : undefined,
+            position: 'position' in userData ? userData.position : undefined,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+
+          setUser(convertedUser);
+          setIsLoggedIn(true);
+
+          // SSR-safe localStorage operations
+          if (typeof window !== 'undefined') {
+            try {
+              localStorage.setItem('user', JSON.stringify(convertedUser));
+              localStorage.setItem('isLoggedIn', 'true');
+            } catch (storageError) {
+              console.error('Error saving to localStorage:', storageError);
+            }
+          }
+
+          return true;
+        }
       }
 
       return false;
@@ -121,17 +213,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     try {
+      // Call logout API (optional, for server-side cleanup)
+      apiClient.logout().catch(console.error);
+
       setUser(null);
-      setTeacher(null);
-      setAdmin(null);
+      setToken(null);
       setIsLoggedIn(false);
+
+      // Clear token from API client
+      apiClient.setToken(null);
 
       // SSR-safe localStorage operations
       if (typeof window !== 'undefined') {
         try {
-          localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem('auth-token');
           localStorage.removeItem('user');
-          localStorage.removeItem('teacher'); // Legacy cleanup
+          // Legacy cleanup
+          localStorage.removeItem('isLoggedIn');
+          localStorage.removeItem('teacher');
         } catch (storageError) {
           console.error('Error clearing localStorage:', storageError);
         }
@@ -143,15 +242,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = {
     user,
-    teacher,
-    admin,
+    token,
     isLoggedIn,
     isLoading,
     login,
     logout,
     isAuthenticated: isLoggedIn,
-    hasAdminAccess: admin !== null,
-    hasTeacherAccess: teacher !== null,
+    hasAdminAccess: user?.role === 'ADMIN',
+    hasTeacherAccess: user?.role === 'TEACHER',
   };
 
   return (

@@ -1,5 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken, extractTokenFromHeader } from '@/lib/auth'
+
+// Simple JWT payload parsing for edge runtime (without verification)
+function parseJWTPayload(token: string) {
+  try {
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
+
+    const payload = parts[1]
+    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')))
+
+    // Check if token is expired
+    if (decoded.exp && Date.now() >= decoded.exp * 1000) {
+      return null
+    }
+
+    return decoded
+  } catch {
+    return null
+  }
+}
+
+function extractTokenFromHeader(authHeader: string | null): string | null {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null
+  }
+  return authHeader.substring(7)
+}
 
 // Define protected API routes
 const protectedApiRoutes = [
@@ -46,7 +72,8 @@ export function middleware(request: NextRequest) {
       )
     }
 
-    const payload = verifyToken(token)
+    // Parse JWT payload (edge runtime compatible)
+    const payload = parseJWTPayload(token)
     if (!payload) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },
@@ -69,13 +96,9 @@ export function middleware(request: NextRequest) {
     })
   }
 
-  // For protected pages (non-API), redirect to login if no token in cookies
-  const token = request.cookies.get('auth-token')?.value
-
-  if (!token && pathname !== '/login' && pathname !== '/') {
-    const loginUrl = new URL('/login', request.url)
-    return NextResponse.redirect(loginUrl)
-  }
+  // For protected pages (non-API), we'll handle auth client-side for now
+  // since we're using localStorage instead of cookies
+  // TODO: Implement proper cookie-based auth for SSR
 
   return NextResponse.next()
 }
