@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { useClass } from '@/contexts/ClassContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseClass } from '@/contexts/SupabaseClassContext';
 
 export default function KelolaKelasPage() {
-  const { user, hasAdminAccess } = useAuth();
+  const { user, hasAdminAccess } = useSupabaseAuth();
   const router = useRouter();
-  const { classes, teachers, addNewClass, deleteClass } = useClass();
+  const { classes } = useSupabaseClass();
   const [showAddForm, setShowAddForm] = useState(false);
   const [loading, setLoading] = useState(true);
 

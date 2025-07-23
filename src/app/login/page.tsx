@@ -175,26 +175,34 @@ export default function LoginPage() {
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Demo Akun Admin (Tata Usaha):
+              Demo Akun Admin:
             </h3>
             <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1 mb-4">
-              {getAllAdmins().map((admin) => (
-                <p key={admin.id}>
-                  <strong>Username:</strong> {admin.username} | <strong>Password:</strong> {admin.password} | <strong>Jabatan:</strong> {admin.position}
-                </p>
-              ))}
+              <p>
+                <strong>Username:</strong> admin | <strong>Password:</strong> admin123
+              </p>
+              <p>
+                <strong>Username:</strong> kepala_sekolah | <strong>Password:</strong> admin123
+              </p>
             </div>
 
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Demo Akun Guru Kelas SD:
+              Demo Akun Guru:
             </h3>
             <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-              {getAllTeachers().slice(0, 4).map((teacher) => (
-                <p key={teacher.id}>
-                  <strong>Username:</strong> {teacher.username} | <strong>Password:</strong> {teacher.password} | <strong>Kelas:</strong> {teacher.className}
-                </p>
-              ))}
-              <p className="text-gray-500 italic">... dan 8 akun guru lainnya</p>
+              <p>
+                <strong>Username:</strong> siti_nurhaliza | <strong>Password:</strong> teacher123 | <strong>Kelas:</strong> 1A
+              </p>
+              <p>
+                <strong>Username:</strong> ahmad_fauzi | <strong>Password:</strong> teacher123 | <strong>Kelas:</strong> 2A
+              </p>
+              <p>
+                <strong>Username:</strong> rina_sari | <strong>Password:</strong> teacher123 | <strong>Kelas:</strong> 3A
+              </p>
+              <p>
+                <strong>Username:</strong> budi_santoso | <strong>Password:</strong> teacher123 | <strong>Kelas:</strong> 4A
+              </p>
+              <p className="text-gray-500 italic">... dan 2 akun guru lainnya</p>
             </div>
           </div>
 

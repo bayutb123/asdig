@@ -3,8 +3,8 @@
 import {useState, useEffect, useCallback} from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { getAllClasses } from '@/data/classesData';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
+import { useSupabaseClass } from '@/contexts/SupabaseClassContext';
 import {
   getAttendanceByClassAndDateRange,
   calculateClassAttendanceStats,
@@ -23,7 +23,8 @@ interface AttendanceReport {
 }
 
 export default function LaporanAbsenPage() {
-  const { user, teacher, admin, hasAdminAccess, hasTeacherAccess } = useAuth();
+  const { user, teacher, admin, hasAdminAccess, hasTeacherAccess } = useSupabaseAuth();
+  const { classes } = useSupabaseClass();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [selectedClass, setSelectedClass] = useState<string>('all');
@@ -56,7 +57,7 @@ export default function LaporanAbsenPage() {
 
   // Define generateReports function
   const generateReports = useCallback(() => {
-    const classes = getAllClasses();
+    // Use classes from Supabase context
 
     // Filter classes based on selection and user role
     let targetClasses = classes;

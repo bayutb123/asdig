@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { getStudentsByClass } from '@/data/studentsData';
 import {
@@ -22,7 +22,7 @@ interface StudentAttendanceData {
 }
 
 export default function CetakAbsenPage() {
-  const { teacher, admin, hasTeacherAccess } = useAuth();
+  const { teacher, admin, hasTeacherAccess } = useSupabaseAuth();
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(true);
