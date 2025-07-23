@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ClassProvider } from "@/contexts/ClassContext";
+import { SupabaseAuthProvider } from "@/contexts/SupabaseAuthContext";
+import { SupabaseClassProvider } from "@/contexts/SupabaseClassContext";
 import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
@@ -83,13 +83,13 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased stable-container`}
         suppressHydrationWarning
       >
-        <AuthProvider>
-          <ClassProvider>
+        <SupabaseAuthProvider>
+          <SupabaseClassProvider>
             <div className="stable-grid min-h-screen">
               {children}
             </div>
-          </ClassProvider>
-        </AuthProvider>
+          </SupabaseClassProvider>
+        </SupabaseAuthProvider>
         <Analytics />
       </body>
     </html>

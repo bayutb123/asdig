@@ -1,0 +1,211 @@
+/**
+ * Supabase-based Class Context
+ * Replaces the old JSON-based class management with Supabase database
+ */
+
+'use client';
+
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { classService, studentService, attendanceService, realtimeService, type Class, type Student, type AttendanceRecord } from '@/lib/database';
+import { useSupabaseAuth } from './SupabaseAuthContext';
+import { trackError } from '@/lib/analytics';
+
+interface ClassContextType {
+  // Data
+  classes: Class[];
+  students: Student[];
+  selectedClass: Class | null;
+  selectedDate: string;
+  attendanceRecords: AttendanceRecord[];
+  
+  // Loading states
+  isLoading: boolean;
+  isLoadingAttendance: boolean;
+  
+  // Actions
+  setSelectedClass: (classItem: Class | null) => void;
+  setSelectedDate: (date: string) => void;
+  refreshClasses: () => Promise<void>;
+  refreshStudents: () => Promise<void>;
+  refreshAttendance: () => Promise<void>;
+  saveAttendance: (records: Omit<AttendanceRecord, 'id' | 'created_at' | 'updated_at'>[]) => Promise<boolean>;
+  
+  // Computed properties
+  studentsInSelectedClass: Student[];
+  attendanceForSelectedDate: AttendanceRecord[];
+  availableDates: string[];
+}
+
+const ClassContext = createContext<ClassContextType | undefined>(undefined);
+
+interface ClassProviderProps {
+  children: ReactNode;
+}
+
+export function SupabaseClassProvider({ children }: ClassProviderProps) {
+  const { user, hasTeacherAccess } = useSupabaseAuth();
+  
+  // State
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  
+  // Loading states
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingAttendance, setIsLoadingAttendance] = useState(false);
+
+  // Computed properties
+  const studentsInSelectedClass = students.filter(student => 
+    selectedClass ? student.class_id === selectedClass.id : false
+  );
+
+  const attendanceForSelectedDate = attendanceRecords.filter(record => 
+    record.date === selectedDate && 
+    (selectedClass ? record.class_id === selectedClass.id : true)
+  );
+
+  // Load classes based on user role
+  const refreshClasses = async () => {
+    try {
+      setIsLoading(true);
+      
+      let classData: Class[] = [];
+      
+      if (user?.role === 'admin') {
+        // Admins can see all classes
+        classData = await classService.getAll();
+      } else if (user?.role === 'teacher') {
+        // Teachers can only see their own classes
+        classData = await classService.getByTeacher(user.id);
+      }
+      
+      setClasses(classData);
+      
+      // Auto-select first class if none selected
+      if (!selectedClass && classData.length > 0) {
+        setSelectedClass(classData[0]);
+      }
+    } catch (error) {
+      console.error('Error loading classes:', error);
+      trackError('class_loading_error', error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Load students
+  const refreshStudents = async () => {
+    try {
+      const studentData = await studentService.getAll();
+      setStudents(studentData);
+    } catch (error) {
+      console.error('Error loading students:', error);
+      trackError('student_loading_error', error instanceof Error ? error.message : 'Unknown error');
+    }
+  };
+
+  // Load attendance records
+  const refreshAttendance = async () => {
+    if (!selectedClass) return;
+    
+    try {
+      setIsLoadingAttendance(true);
+      
+      // Load attendance for selected class and date
+      const attendanceData = await attendanceService.getByClassAndDate(selectedClass.id, selectedDate);
+      setAttendanceRecords(attendanceData);
+      
+      // Load available dates
+      const dates = await attendanceService.getAvailableDates();
+      setAvailableDates(dates);
+    } catch (error) {
+      console.error('Error loading attendance:', error);
+      trackError('attendance_loading_error', error instanceof Error ? error.message : 'Unknown error');
+    } finally {
+      setIsLoadingAttendance(false);
+    }
+  };
+
+  // Save attendance records
+  const saveAttendance = async (records: Omit<AttendanceRecord, 'id' | 'created_at' | 'updated_at'>[]): Promise<boolean> => {
+    try {
+      setIsLoadingAttendance(true);
+      
+      const savedRecords = await attendanceService.bulkUpsertAttendance(records);
+      
+      if (savedRecords.length > 0) {
+        // Refresh attendance data
+        await refreshAttendance();
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      trackError('attendance_save_error', error instanceof Error ? error.message : 'Unknown error');
+      return false;
+    } finally {
+      setIsLoadingAttendance(false);
+    }
+  };
+
+  // Load initial data when user changes
+  useEffect(() => {
+    if (user && hasTeacherAccess) {
+      refreshClasses();
+      refreshStudents();
+    }
+  }, [user, hasTeacherAccess]);
+
+  // Load attendance when selected class or date changes
+  useEffect(() => {
+    if (selectedClass && selectedDate) {
+      refreshAttendance();
+    }
+  }, [selectedClass, selectedDate]);
+
+  const value = {
+    // Data
+    classes,
+    students,
+    selectedClass,
+    selectedDate,
+    attendanceRecords,
+    
+    // Loading states
+    isLoading,
+    isLoadingAttendance,
+    
+    // Actions
+    setSelectedClass,
+    setSelectedDate,
+    refreshClasses,
+    refreshStudents,
+    refreshAttendance,
+    saveAttendance,
+    
+    // Computed properties
+    studentsInSelectedClass,
+    attendanceForSelectedDate,
+    availableDates,
+  };
+
+  return (
+    <ClassContext.Provider value={value}>
+      {children}
+    </ClassContext.Provider>
+  );
+}
+
+export function useSupabaseClass() {
+  const context = useContext(ClassContext);
+  if (context === undefined) {
+    throw new Error('useSupabaseClass must be used within a SupabaseClassProvider');
+  }
+  return context;
+}
+
+export default ClassContext;
