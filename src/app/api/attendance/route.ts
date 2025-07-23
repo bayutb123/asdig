@@ -20,19 +20,26 @@ export async function GET(request: NextRequest) {
     if (userRole === 'TEACHER' && userClassId) {
       // Teachers can only see attendance for their class
       const targetClassId = classId || userClassId
-      
-      if (classId && classId !== userClassId) {
+
+      // Case-insensitive comparison for class IDs
+      if (classId && classId.toLowerCase() !== userClassId.toLowerCase()) {
         return NextResponse.json(
           { error: 'Access denied - can only view your own class' },
           { status: 403 }
         )
       }
-      
-      whereClause.classId = targetClassId
+
+      // Use case-insensitive search for classId (SQLite compatible)
+      whereClause.classId = {
+        in: [targetClassId, targetClassId.toLowerCase(), targetClassId.toUpperCase()]
+      }
     } else if (userRole === 'ADMIN') {
       // Admins can see all attendance or filter by class
       if (classId) {
-        whereClause.classId = classId
+        // Use case-insensitive search for classId (SQLite compatible)
+        whereClause.classId = {
+          in: [classId, classId.toLowerCase(), classId.toUpperCase()]
+        }
       }
     } else {
       return NextResponse.json(
@@ -64,6 +71,16 @@ export async function GET(request: NextRequest) {
       whereClause.studentId = studentId
     }
 
+    // Debug logging
+    console.log('Attendance API Query:', {
+      whereClause,
+      classId,
+      date,
+      startDate,
+      endDate,
+      studentId
+    });
+
     const attendanceRecords = await prisma.attendanceRecord.findMany({
       where: whereClause,
       include: {
@@ -92,6 +109,28 @@ export async function GET(request: NextRequest) {
         { studentName: 'asc' },
       ],
     })
+
+    console.log('Attendance API Results:', {
+      recordCount: attendanceRecords.length,
+      records: attendanceRecords.slice(0, 2) // Show first 2 records for debugging
+    });
+
+    // If no records found, let's check if there are any records at all
+    if (attendanceRecords.length === 0) {
+      const totalRecords = await prisma.attendanceRecord.count();
+      const sampleRecords = await prisma.attendanceRecord.findMany({
+        take: 3,
+        select: {
+          id: true,
+          classId: true,
+          date: true,
+          studentName: true,
+          status: true
+        }
+      });
+      console.log('Debug - Total attendance records in DB:', totalRecords);
+      console.log('Debug - Sample records:', sampleRecords);
+    }
 
     return NextResponse.json({
       success: true,

@@ -3,6 +3,7 @@
 import { createContext, useContext, useCallback, useEffect, ReactNode } from 'react';
 import { ClassInfo, User } from '@/services/dataService';
 import { useClasses, useUsers } from '@/hooks/useApi';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Type alias for backward compatibility
 type Teacher = User & { role: 'TEACHER' }
@@ -26,18 +27,27 @@ interface ClassProviderProps {
 }
 
 export function ClassProvider({ children }: ClassProviderProps) {
+  const { user } = useAuth();
+
   // Use React Query hooks for data fetching
   const { data: classesData, isLoading: classesLoading, refetch: refetchClasses } = useClasses();
-  const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useUsers();
+
+  // Only fetch users if the current user is an admin
+  const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useUsers({
+    enabled: user?.role === 'ADMIN'
+  });
 
   const classes = classesData?.classes || [];
   const teachers = (usersData?.users || []).filter(user => user.role === 'TEACHER') as Teacher[];
-  const isLoading = classesLoading || usersLoading;
+  const isLoading = classesLoading || (user?.role === 'ADMIN' ? usersLoading : false);
 
   const refreshData = useCallback(() => {
     refetchClasses();
-    refetchUsers();
-  }, [refetchClasses, refetchUsers]);
+    // Only refetch users if the current user is an admin
+    if (user?.role === 'ADMIN') {
+      refetchUsers();
+    }
+  }, [refetchClasses, refetchUsers, user?.role]);
 
   // Load initial data
   useEffect(() => {

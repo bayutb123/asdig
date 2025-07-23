@@ -73,7 +73,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      classes: classesWithUpdatedCount,
+      data: classesWithUpdatedCount,
+      classes: classesWithUpdatedCount, // Keep backward compatibility
     })
   } catch (error) {
     console.error('Get classes error:', error)

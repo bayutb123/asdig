@@ -54,6 +54,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedUser = localStorage.getItem('user');
         const storedIsLoggedIn = localStorage.getItem('isLoggedIn');
 
+        // Debug logging
+        console.log('AuthContext Debug:', {
+          storedToken: storedToken ? 'exists' : 'null',
+          storedUser: storedUser ? 'exists' : 'null',
+          storedIsLoggedIn,
+          tokenExpired: storedToken ? isTokenExpired(storedToken) : 'no token'
+        });
+
         // Try new JWT-based auth first
         if (storedToken && storedUser) {
           try {

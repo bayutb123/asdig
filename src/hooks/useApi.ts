@@ -180,6 +180,19 @@ class ApiClient {
     })
   }
 
+  async updateStudent(studentId: string, studentData: Partial<Student>) {
+    return this.request<{ success: boolean; student: Student }>(`/students/${studentId}`, {
+      method: 'PUT',
+      body: JSON.stringify(studentData),
+    })
+  }
+
+  async deleteStudent(studentId: string) {
+    return this.request<{ success: boolean; message: string }>(`/students/${studentId}`, {
+      method: 'DELETE',
+    })
+  }
+
   // Attendance endpoints
   async getAttendance(params?: {
     classId?: string
@@ -187,8 +200,17 @@ class ApiClient {
     startDate?: string
     endDate?: string
     studentId?: string
+    enabled?: boolean
   }) {
-    const query = params ? '?' + new URLSearchParams(params as Record<string, string>).toString() : ''
+    if (!params) {
+      return this.request<{ success: boolean; attendanceRecords: AttendanceRecord[] }>('/attendance')
+    }
+
+    // Filter out the 'enabled' parameter as it's only for React Query
+    const { enabled, ...apiParams } = params
+    const query = Object.keys(apiParams).length > 0
+      ? '?' + new URLSearchParams(apiParams as Record<string, string>).toString()
+      : ''
     return this.request<{ success: boolean; attendanceRecords: AttendanceRecord[] }>(`/attendance${query}`)
   }
 
@@ -213,10 +235,11 @@ if (typeof window !== 'undefined') {
 // React Query hooks
 
 // Users hooks
-export function useUsers() {
+export function useUsers(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ['users'],
     queryFn: () => apiClient.getUsers(),
+    enabled: options?.enabled ?? true,
   })
 }
 
@@ -273,9 +296,34 @@ export function useStudents(classId?: string) {
 
 export function useCreateStudent() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: (studentData: Partial<Student>) => apiClient.createStudent(studentData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] })
+      queryClient.invalidateQueries({ queryKey: ['classes'] })
+    },
+  })
+}
+
+export function useUpdateStudent() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ studentId, studentData }: { studentId: string; studentData: Partial<Student> }) =>
+      apiClient.updateStudent(studentId, studentData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['students'] })
+      queryClient.invalidateQueries({ queryKey: ['classes'] })
+    },
+  })
+}
+
+export function useDeleteStudent() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (studentId: string) => apiClient.deleteStudent(studentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['students'] })
       queryClient.invalidateQueries({ queryKey: ['classes'] })
@@ -293,7 +341,7 @@ export function useAttendance(params?: {
   enabled?: boolean
 }) {
   return useQuery({
-    queryKey: ['attendance', params],
+    queryKey: ['attendance', params?.classId, params?.date, params?.startDate, params?.endDate, params?.studentId],
     queryFn: () => apiClient.getAttendance(params),
     enabled: params?.enabled !== false,
   })
@@ -320,7 +368,7 @@ export function useLogin() {
 
 export function useLogout() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: () => apiClient.logout(),
     onSuccess: () => {
@@ -328,4 +376,63 @@ export function useLogout() {
       queryClient.clear()
     },
   })
+}
+
+// Generic API hook for direct HTTP calls
+export function useApi() {
+  const makeRequest = async (endpoint: string, options: RequestInit = {}) => {
+    const url = endpoint.startsWith('/api') ? endpoint : `/api${endpoint}`
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
+    }
+
+    // Add auth headers if available
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+
+    // Add user role and class headers for compatibility with existing API
+    const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        headers['x-user-role'] = user.role
+        if (user.classId) {
+          headers['x-user-class-id'] = user.classId
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({
+        success: false,
+        message: 'Network error'
+      }))
+      throw new Error(errorData.message || `HTTP ${response.status}`)
+    }
+
+    return response.json()
+  }
+
+  return {
+    get: (endpoint: string) => makeRequest(endpoint, { method: 'GET' }),
+    post: (endpoint: string, data?: any) => makeRequest(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+    put: (endpoint: string, data?: any) => makeRequest(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+    del: (endpoint: string) => makeRequest(endpoint, { method: 'DELETE' }),
+  }
 }

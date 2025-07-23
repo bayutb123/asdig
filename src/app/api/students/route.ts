@@ -6,78 +6,120 @@ export async function GET(request: NextRequest) {
   try {
     const userRole = request.headers.get('x-user-role')
     const userClassId = request.headers.get('x-user-class-id')
+
     const { searchParams } = new URL(request.url)
     const classId = searchParams.get('classId')
 
-    let students
+    // Debug logging
+    console.log('Students API Debug:', {
+      userRole,
+      userClassId,
+      classId,
+      url: request.url
+    });
 
-    if (userRole === 'ADMIN') {
-      // Admins can see all students or filter by class
-      const whereClause = classId ? { classId } : {}
-      
-      students = await prisma.student.findMany({
-        where: whereClause,
-        include: {
-          class: {
-            select: {
-              id: true,
-              name: true,
-              grade: true,
-              section: true,
-              teacherName: true,
-            },
-          },
-        },
-        orderBy: [
-          { className: 'asc' },
-          { name: 'asc' },
-        ],
-      })
-    } else if (userRole === 'TEACHER' && userClassId) {
-      // Teachers can only see students from their class
-      const targetClassId = classId || userClassId
-      
-      if (classId && classId !== userClassId) {
+    // Role-based access control
+    if (userRole === 'TEACHER') {
+      // Teachers can only access students from their own class
+      if (!userClassId) {
         return NextResponse.json(
-          { error: 'Access denied - can only view your own class' },
+          { success: false, message: 'Teacher class not assigned' },
           { status: 403 }
         )
       }
 
-      students = await prisma.student.findMany({
-        where: {
-          classId: targetClassId,
-        },
-        include: {
-          class: {
-            select: {
-              id: true,
-              name: true,
-              grade: true,
-              section: true,
-              teacherName: true,
-            },
-          },
-        },
-        orderBy: {
-          name: 'asc',
-        },
-      })
-    } else {
+      // If classId is specified, it must match teacher's class (case-insensitive)
+      if (classId && classId.toLowerCase() !== userClassId.toLowerCase()) {
+        return NextResponse.json(
+          { success: false, message: 'Access denied - can only view your own class' },
+          { status: 403 }
+        )
+      }
+    } else if (userRole !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Access denied' },
+        { success: false, message: 'Admin or teacher access required' },
         { status: 403 }
       )
     }
 
-    return NextResponse.json({
-      success: true,
-      students,
+    // Build where clause based on role and filters
+    let whereClause: Record<string, unknown> = {}
+
+    if (userRole === 'TEACHER') {
+      // Teachers can only see their own class students (case-insensitive)
+      const targetClassId = classId || userClassId
+      whereClause = {
+        classId: {
+          in: [targetClassId, targetClassId.toLowerCase(), targetClassId.toUpperCase()]
+        }
+      }
+    } else if (classId) {
+      // Admins can filter by any class (case-insensitive)
+      whereClause = {
+        classId: {
+          in: [classId, classId.toLowerCase(), classId.toUpperCase()]
+        }
+      }
+    }
+
+    const students = await prisma.student.findMany({
+      where: whereClause,
+      include: {
+        class: {
+          select: {
+            id: true,
+            name: true,
+            grade: true,
+            section: true,
+            teacherName: true,
+          },
+        },
+      },
+      orderBy: [
+        { class: { grade: 'asc' } },
+        { class: { section: 'asc' } },
+        { name: 'asc' },
+      ],
     })
+
+    // Transform data to include className and map status
+    const transformedStudents = students.map(student => ({
+      ...student,
+      className: student.class?.name || 'Tidak ada kelas',
+      status: student.status === 'HADIR' ? 'ACTIVE' : 'INACTIVE', // Map database status to frontend status
+      class: undefined // Remove the nested class object
+    }))
+
+    console.log('Students API - Raw students from DB:', {
+      count: students.length,
+      firstStudent: students[0] ? {
+        id: students[0].id,
+        name: students[0].name,
+        classId: students[0].classId
+      } : null
+    });
+
+    console.log('Students API - Transformed students:', {
+      count: transformedStudents.length,
+      firstStudent: transformedStudents[0] ? {
+        id: transformedStudents[0].id,
+        name: transformedStudents[0].name,
+        classId: transformedStudents[0].classId
+      } : null
+    });
+
+    const response = {
+      success: true,
+      students: transformedStudents,
+    };
+
+    console.log('Students API Response:', response);
+
+    return NextResponse.json(response)
   } catch (error) {
     console.error('Get students error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, message: 'Internal server error' },
       { status: 500 }
     )
   }
@@ -87,84 +129,76 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const userRole = request.headers.get('x-user-role')
-    
+
     if (userRole !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Admin access required' },
+        { success: false, message: 'Admin access required' },
         { status: 403 }
       )
     }
 
-    const studentData = await request.json()
+    const body = await request.json()
     const {
-      id,
       name,
-      classId,
-      className,
       nisn,
+      classId,
       gender,
       birthDate,
       address,
       parentName,
       parentPhone,
-      status = 'HADIR',
-      checkInTime,
-      notes,
-    } = studentData
+      status = 'ACTIVE'
+    } = body
 
     // Validate required fields
-    if (!id || !name || !classId || !className || !nisn || !gender || !birthDate || !address || !parentName || !parentPhone) {
+    if (!name || !nisn || !classId || !gender || !birthDate || !address || !parentName || !parentPhone) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { success: false, message: 'All fields are required' },
         { status: 400 }
       )
     }
 
-    // Check if student already exists
-    const existingStudent = await prisma.student.findFirst({
-      where: {
-        OR: [
-          { id },
-          { nisn },
-        ],
-      },
+    // Check if NISN already exists
+    const existingStudent = await prisma.student.findUnique({
+      where: { nisn }
     })
 
     if (existingStudent) {
       return NextResponse.json(
-        { error: 'Student with this ID or NISN already exists' },
-        { status: 409 }
+        { success: false, message: 'NISN sudah terdaftar' },
+        { status: 400 }
       )
     }
 
-    // Verify class exists
+    // Check if class exists
     const classExists = await prisma.class.findUnique({
-      where: { id: classId },
+      where: { id: classId }
     })
 
     if (!classExists) {
       return NextResponse.json(
-        { error: 'Class not found' },
-        { status: 404 }
+        { success: false, message: 'Kelas tidak ditemukan' },
+        { status: 400 }
       )
     }
 
+    // Generate unique ID
+    const studentId = `student-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
     // Create student
-    const newStudent = await prisma.student.create({
+    const student = await prisma.student.create({
       data: {
-        id,
+        id: studentId,
         name,
-        classId,
-        className,
         nisn,
+        classId,
+        className: classExists.name,
         gender,
-        birthDate,
+        birthDate: birthDate, // Keep as string, don't convert to Date
         address,
         parentName,
         parentPhone,
-        status,
-        checkInTime,
-        notes,
+        status: status === 'ACTIVE' ? 'HADIR' : 'TIDAK_HADIR' // Map to existing enum
       },
       include: {
         class: {
@@ -191,12 +225,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      student: newStudent,
-    }, { status: 201 })
+      data: {
+        ...student,
+        className: student.class?.name || 'Tidak ada kelas',
+        status: student.status === 'HADIR' ? 'ACTIVE' : 'INACTIVE' // Map back for frontend
+      }
+    })
   } catch (error) {
     console.error('Create student error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, message: 'Internal server error' },
       { status: 500 }
     )
   }
