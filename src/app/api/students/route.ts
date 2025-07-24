@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
 
     const response = {
       success: true,
-      students: transformedStudents,
+      data: transformedStudents,
     };
 
     console.log('Students API Response:', response);
