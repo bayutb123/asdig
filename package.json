@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "npx prisma generate && next build",
+    "build:local": "next build",
+    "postinstall": "npx prisma generate",
     "build:modern": "BROWSERSLIST_ENV=production next build",
     "build:legacy": "BROWSERSLIST_ENV=legacy next build",
     "start": "next start",
