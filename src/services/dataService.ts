@@ -130,7 +130,11 @@ class DataService {
   async getAllStudents(): Promise<Student[]> {
     try {
       const response = await apiClient.getStudents()
-      return response.students
+      // Ensure all students have enrollmentStatus field (default to ACTIVE if missing)
+      return response.data.map(student => ({
+        ...student,
+        enrollmentStatus: (student as Student & { enrollmentStatus?: string }).enrollmentStatus || 'ACTIVE'
+      })) as Student[]
     } catch (error) {
       console.error('Failed to fetch students:', error)
       return []
@@ -140,7 +144,11 @@ class DataService {
   async getStudentsByClass(classId: string): Promise<Student[]> {
     try {
       const response = await apiClient.getStudents(classId)
-      return response.students
+      // Ensure all students have enrollmentStatus field (default to ACTIVE if missing)
+      return response.data.map(student => ({
+        ...student,
+        enrollmentStatus: (student as Student & { enrollmentStatus?: string }).enrollmentStatus || 'ACTIVE'
+      })) as Student[]
     } catch (error) {
       console.error('Failed to fetch students for class:', classId, error)
       return []
@@ -244,7 +252,12 @@ class DataService {
   async createStudent(data: Partial<Student>): Promise<Student | null> {
     try {
       const response = await apiClient.createStudent(data)
-      return response.student
+      // Ensure student has enrollmentStatus field (default to ACTIVE if missing)
+      const student = response.data
+      return {
+        ...student,
+        enrollmentStatus: (student as Student & { enrollmentStatus?: string }).enrollmentStatus || 'ACTIVE'
+      } as Student
     } catch (error) {
       console.error('Failed to create student:', error)
       return null

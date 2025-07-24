@@ -174,7 +174,7 @@ class ApiClient {
   }
 
   async createStudent(studentData: Partial<Student>) {
-    return this.request<{ success: boolean; student: Student }>('/students', {
+    return this.request<{ success: boolean; data: Student }>('/students', {
       method: 'POST',
       body: JSON.stringify(studentData),
     })

@@ -74,7 +74,6 @@ export function ClassProvider({ children }: ClassProviderProps) {
       id: newTeacherId,
       classId: newClassId,
       username: `walikelas${classData.grade}${classData.section.toLowerCase()}`,
-      password: 'password123',
       subject: 'Guru Kelas',
     };
 

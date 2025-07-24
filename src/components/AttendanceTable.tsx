@@ -86,12 +86,18 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
   };
 
   // Filter and sort students
+  // Ensure students have enrollmentStatus field (default to ACTIVE if missing)
+  const studentsWithEnrollmentStatus = students.map(student => ({
+    ...student,
+    enrollmentStatus: (student as Student & { enrollmentStatus?: string }).enrollmentStatus || 'ACTIVE'
+  })) as Student[];
+
   const filteredStudents = user?.role === 'TEACHER' ?
     // Teacher view: just sort the students
-    sortStudents([...students]) :
+    sortStudents([...studentsWithEnrollmentStatus]) :
     // Public view: filter then sort
     (() => {
-      const filtered = students.filter(student => {
+      const filtered = studentsWithEnrollmentStatus.filter(student => {
         const classMatch = filterClass === 'Semua' || student.className === filterClass;
         const statusMatch = filterStatus === 'Semua' || getStatusText(student.status) === filterStatus;
         const searchMatch = searchQuery === '' ||
@@ -120,36 +126,31 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
   const handleStatusChange = (newStatus: Student['status']) => {
     setTempStatus(newStatus);
 
-    // Jika status berubah ke "Hadir", otomatis set waktu masuk ke waktu sekarang
-    if (newStatus === 'Hadir' && !tempCheckInTime) {
+    // Jika status berubah ke "HADIR", otomatis set waktu masuk ke waktu sekarang
+    if (newStatus === 'HADIR' && !tempCheckInTime) {
       setTempCheckInTime(getCurrentTime());
     }
 
-    // Jika status bukan "Hadir" atau "Terlambat", hapus waktu
-    if (newStatus !== 'Hadir' && newStatus !== 'Terlambat') {
+    // Jika status bukan "HADIR" atau "TERLAMBAT", hapus waktu
+    if (newStatus !== 'HADIR' && newStatus !== 'TERLAMBAT') {
       setTempCheckInTime('');
     }
   };
 
   // Fungsi untuk menyimpan edit
   const saveEdit = (studentId: string) => {
-    setStudents(prev => prev.map(student => {
-      if (student.id === studentId) {
-          return {
-            ...student,
-            status: tempStatus,
-            checkInTime: (tempStatus === 'Hadir' || tempStatus === 'Terlambat') ? tempCheckInTime : undefined,
-        };
-      }
-      return student;
-    }));
+    // TODO: Implement API call to update attendance
+    console.log('Saving attendance for student:', studentId, {
+      status: tempStatus,
+      checkInTime: (tempStatus === 'HADIR' || tempStatus === 'TERLAMBAT') ? tempCheckInTime : undefined,
+    });
     setEditingStudent(null);
   };
 
   // Fungsi untuk membatalkan edit
   const cancelEdit = () => {
     setEditingStudent(null);
-    setTempStatus('Hadir');
+    setTempStatus('HADIR');
     setTempCheckInTime('');
   };
 
@@ -355,7 +356,7 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
                       type="time"
                       value={tempCheckInTime}
                       onChange={(e) => setTempCheckInTime(e.target.value)}
-                      disabled={tempStatus !== 'Hadir' && tempStatus !== 'Terlambat'}
+                      disabled={tempStatus !== 'HADIR' && tempStatus !== 'TERLAMBAT'}
                       className="text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-2 py-1 disabled:bg-gray-100 dark:disabled:bg-gray-600"
                     />
                   ) : (
