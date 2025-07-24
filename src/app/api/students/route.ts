@@ -48,9 +48,11 @@ export async function GET(request: NextRequest) {
     if (userRole === 'TEACHER') {
       // Teachers can only see their own class students (case-insensitive)
       const targetClassId = classId || userClassId
-      whereClause = {
-        classId: {
-          in: [targetClassId, targetClassId.toLowerCase(), targetClassId.toUpperCase()]
+      if (targetClassId) {
+        whereClause = {
+          classId: {
+            in: [targetClassId, targetClassId.toLowerCase(), targetClassId.toUpperCase()]
+          }
         }
       }
     } else if (classId) {

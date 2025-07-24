@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useStudents, useAttendance, useCreateAttendance } from '@/hooks/useApi'
-import { Student } from '@/types'
+import { Student } from '@/services/dataService'
 
 type AttendanceStatus = 'Hadir' | 'Tidak Hadir' | 'Terlambat' | 'Izin' | '-'
 
@@ -51,7 +51,7 @@ export default function ManualAttendancePage() {
   const createAttendanceMutation = useCreateAttendance()
 
   // Extract students and attendance records with useMemo to prevent infinite re-renders
-  const students = useMemo(() => studentsData?.students || [], [studentsData?.students])
+  const students = useMemo(() => studentsData?.data || [], [studentsData?.data])
   const attendanceRecords = useMemo(() => attendanceData?.attendanceRecords || [], [attendanceData?.attendanceRecords])
 
   console.log('API Data:', {
@@ -72,7 +72,7 @@ export default function ManualAttendancePage() {
     }
   }
 
-  const mapFrontendStatusToBackend = (frontendStatus: AttendanceStatus): string => {
+  const mapFrontendStatusToBackend = (frontendStatus: AttendanceStatus): 'HADIR' | 'TERLAMBAT' | 'TIDAK_HADIR' | 'IZIN' => {
     switch (frontendStatus) {
       case 'Hadir': return 'HADIR'
       case 'Tidak Hadir': return 'TIDAK_HADIR'
@@ -94,8 +94,9 @@ export default function ManualAttendancePage() {
     const studentsWithAttendance: StudentWithAttendance[] = students.map(student => {
       const existingRecord = attendanceRecords.find(record => record.studentId === student.id)
 
-      const result = {
+      const result: StudentWithAttendance = {
         ...student,
+        enrollmentStatus: (student as Student & { enrollmentStatus?: string }).enrollmentStatus || 'ACTIVE', // Provide default if missing
         attendanceStatus: existingRecord ? mapBackendStatusToFrontend(existingRecord.status) : '-' as AttendanceStatus,
         checkInTime: existingRecord?.checkInTime || undefined,
         notes: existingRecord?.notes || ''
@@ -172,7 +173,7 @@ export default function ManualAttendancePage() {
           className: student.className || '',
           date: selectedDate,
           status: mapFrontendStatusToBackend(student.attendanceStatus),
-          checkInTime: student.checkInTime || null,
+          checkInTime: student.checkInTime || undefined,
           notes: student.notes || '',
           reason: student.notes || ''
         }

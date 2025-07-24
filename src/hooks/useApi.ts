@@ -170,7 +170,7 @@ class ApiClient {
   // Students endpoints
   async getStudents(classId?: string) {
     const query = classId ? `?classId=${classId}` : ''
-    return this.request<{ success: boolean; students: Student[] }>(`/students${query}`)
+    return this.request<{ success: boolean; data: Student[] }>(`/students${query}`)
   }
 
   async createStudent(studentData: Partial<Student>) {

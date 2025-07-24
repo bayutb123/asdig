@@ -21,7 +21,7 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
     date: selectedDate
   });
 
-  const students = studentsData?.students || [];
+  const students = studentsData?.data || [];
   const loading = studentsLoading || attendanceLoading;
 
   // Dynamic heading components for proper hierarchy

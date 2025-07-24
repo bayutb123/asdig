@@ -60,10 +60,10 @@ async function testIntegration() {
     console.log('\n4️⃣ Testing Students API...')
     try {
       const studentsResponse = await apiClient.getStudents()
-      console.log(`✅ Fetched ${studentsResponse.students.length} students`)
-      
-      if (studentsResponse.students.length > 0) {
-        const firstStudent = studentsResponse.students[0]
+      console.log(`✅ Fetched ${studentsResponse.data.length} students`)
+
+      if (studentsResponse.data.length > 0) {
+        const firstStudent = studentsResponse.data[0]
         console.log(`   Sample: ${firstStudent.name} - ${firstStudent.className}`)
       }
     } catch (error) {
@@ -103,8 +103,8 @@ async function testIntegration() {
     console.log('\n7️⃣ Testing Create Attendance...')
     try {
       const studentsResponse = await apiClient.getStudents()
-      if (studentsResponse.students.length > 0) {
-        const testStudent = studentsResponse.students[0]
+      if (studentsResponse.data.length > 0) {
+        const testStudent = studentsResponse.data[0]
         const testDate = new Date().toISOString().split('T')[0]
         
         const newRecord = await apiClient.createAttendance({
@@ -150,7 +150,7 @@ async function testIntegration() {
       if (classesResponse.classes.length > 0) {
         const firstClass = classesResponse.classes[0]
         const classStudents = await apiClient.getStudents(firstClass.id)
-        console.log(`✅ Fetched ${classStudents.students.length} students for class ${firstClass.name}`)
+        console.log(`✅ Fetched ${classStudents.data.length} students for class ${firstClass.name}`)
       }
 
       // Test getting attendance by date
