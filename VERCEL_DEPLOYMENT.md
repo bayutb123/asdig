@@ -4,9 +4,14 @@
 
 To fix the 500 Internal Server Error on login, you need to set these environment variables in your Vercel dashboard:
 
-### 1. Database Configuration
+### 1. Database Configuration (Supabase)
 ```
-DATABASE_URL=your_production_database_url
+# Supabase PostgreSQL connection string
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:6543/postgres?pgbouncer=true&connection_limit=1
+
+# Optional: Supabase additional configs
+NEXT_PUBLIC_SUPABASE_URL=https://[PROJECT-REF].supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 ### 2. Authentication Configuration
@@ -76,16 +81,33 @@ DATABASE_URL="mysql://username:password@host.planetscale.com/database?sslaccept=
 DATABASE_URL="mysql://root:password@containers-us-west-1.railway.app:6543/railway"
 ```
 
-### Option 3: Supabase (PostgreSQL)
+### Option 3: Supabase (PostgreSQL) - Recommended for Full-Stack Apps
 ```bash
 # 1. Create account at https://supabase.com/
 # 2. Create new project
-# 3. Get PostgreSQL connection string
+# 3. Get PostgreSQL connection string from Settings > Database
 # 4. Set as DATABASE_URL in Vercel
 
 # Example connection string:
-DATABASE_URL="postgresql://postgres:password@db.project.supabase.co:5432/postgres"
+DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
+
+# Alternative with connection pooling (recommended for serverless):
+DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:6543/postgres?pgbouncer=true&connection_limit=1"
 ```
+
+#### Supabase Setup Steps:
+1. **Create Project**: Go to [supabase.com](https://supabase.com) → New Project
+2. **Get Database URL**: Settings → Database → Connection string → URI
+3. **Copy Password**: Use the password you set during project creation
+4. **Enable Connection Pooling**: Use port 6543 for better serverless performance
+5. **Set in Vercel**: Add DATABASE_URL to environment variables
+
+#### Supabase Benefits:
+- ✅ **Built-in Auth**: Optional authentication system
+- ✅ **Real-time**: WebSocket support for live updates
+- ✅ **Storage**: File upload and management
+- ✅ **Edge Functions**: Serverless functions
+- ✅ **Dashboard**: Built-in database management UI
 
 ### Option 4: Vercel Postgres (Native Integration)
 ```bash

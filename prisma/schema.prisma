@@ -6,13 +6,13 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 // User model for authentication (Teachers and Admins)
 model User {
-  id        String   @id
+  id        String   @id @default(cuid())
   name      String
   nip       String   @unique
   username  String   @unique
@@ -39,7 +39,7 @@ model User {
 
 // Class model
 model Class {
-  id           String @id
+  id           String @id @default(cuid())
   name         String @unique
   grade        Int
   section      String
@@ -59,7 +59,7 @@ model Class {
 
 // Student model
 model Student {
-  id               String           @id
+  id               String           @id @default(cuid())
   name             String
   classId          String
   className        String
