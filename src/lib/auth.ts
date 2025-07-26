@@ -13,6 +13,11 @@ if (typeof window === 'undefined') {
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d'
 
+// Validate JWT_SECRET in production
+if (typeof window === 'undefined' && process.env.NODE_ENV === 'production' && JWT_SECRET === 'your-secret-key-change-in-production') {
+  console.error('SECURITY WARNING: JWT_SECRET is using default value in production!')
+}
+
 export interface JWTPayload {
   userId: string
   username: string

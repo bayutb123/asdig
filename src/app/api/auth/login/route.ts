@@ -4,6 +4,23 @@ import { verifyPassword, generateToken } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
+    // Check environment variables
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET environment variable is not set')
+      return NextResponse.json(
+        { error: 'Server configuration error' },
+        { status: 500 }
+      )
+    }
+
+    if (!process.env.DATABASE_URL) {
+      console.error('DATABASE_URL environment variable is not set')
+      return NextResponse.json(
+        { error: 'Database configuration error' },
+        { status: 500 }
+      )
+    }
+
     const { username, password } = await request.json()
 
     // Validate input
@@ -56,8 +73,18 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Login error:', error)
+
+    // Provide more specific error information in development
+    const isDevelopment = process.env.NODE_ENV === 'development'
+    const errorMessage = isDevelopment && error instanceof Error
+      ? `Internal server error: ${error.message}`
+      : 'Internal server error'
+
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: errorMessage,
+        ...(isDevelopment && { stack: error instanceof Error ? error.stack : undefined })
+      },
       { status: 500 }
     )
   }
