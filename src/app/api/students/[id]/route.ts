@@ -230,6 +230,11 @@ export async function DELETE(
       )
     }
 
+    // Delete all attendance records for this student first
+    await prisma.attendanceRecord.deleteMany({
+      where: { studentId: id }
+    })
+
     // Delete student
     await prisma.student.delete({
       where: { id }
