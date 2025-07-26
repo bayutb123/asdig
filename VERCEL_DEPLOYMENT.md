@@ -44,23 +44,61 @@ vercel env add NODE_ENV
 
 ## Database Setup for Production
 
-### Option 1: PlanetScale (Recommended)
-1. Create account at [PlanetScale](https://planetscale.com/)
-2. Create a new database
-3. Get connection string from dashboard
-4. Set as `DATABASE_URL` in Vercel
+⚠️ **IMPORTANT**: Do NOT use SQLite (dev.db) for Vercel deployment!
 
-### Option 2: Railway
-1. Create account at [Railway](https://railway.app/)
-2. Create MySQL database
-3. Get connection string
-4. Set as `DATABASE_URL` in Vercel
+### Why Not SQLite on Vercel?
+- **Read-only filesystem**: Vercel functions can't write to SQLite files
+- **Serverless limitations**: Multiple function instances can't share SQLite
+- **Performance issues**: File-based databases don't work well in serverless
+- **Data persistence**: Files are ephemeral in serverless environments
 
-### Option 3: Supabase
-1. Create account at [Supabase](https://supabase.com/)
-2. Create new project
-3. Get PostgreSQL connection string
-4. Set as `DATABASE_URL` in Vercel
+### Recommended Production Databases:
+
+### Option 1: PlanetScale (Recommended - MySQL)
+```bash
+# 1. Create account at https://planetscale.com/
+# 2. Create a new database
+# 3. Get connection string from dashboard
+# 4. Set as DATABASE_URL in Vercel
+
+# Example connection string:
+DATABASE_URL="mysql://username:password@host.planetscale.com/database?sslaccept=strict"
+```
+
+### Option 2: Railway (MySQL/PostgreSQL)
+```bash
+# 1. Create account at https://railway.app/
+# 2. Create MySQL or PostgreSQL database
+# 3. Get connection string from dashboard
+# 4. Set as DATABASE_URL in Vercel
+
+# Example connection string:
+DATABASE_URL="mysql://root:password@containers-us-west-1.railway.app:6543/railway"
+```
+
+### Option 3: Supabase (PostgreSQL)
+```bash
+# 1. Create account at https://supabase.com/
+# 2. Create new project
+# 3. Get PostgreSQL connection string
+# 4. Set as DATABASE_URL in Vercel
+
+# Example connection string:
+DATABASE_URL="postgresql://postgres:password@db.project.supabase.co:5432/postgres"
+```
+
+### Option 4: Vercel Postgres (Native Integration)
+```bash
+# 1. Go to Vercel Dashboard → Storage
+# 2. Create Postgres database
+# 3. Connection string automatically added to environment variables
+# 4. No manual configuration needed
+
+# Automatically sets:
+POSTGRES_URL="postgres://..."
+POSTGRES_PRISMA_URL="postgres://..."
+POSTGRES_URL_NON_POOLING="postgres://..."
+```
 
 ## JWT Secret Generation
 
@@ -82,18 +120,85 @@ openssl rand -hex 64
 ### 1. Set Environment Variables
 Set all required environment variables in Vercel dashboard.
 
-### 2. Database Migration
-Run Prisma migrations on your production database:
+### 2. Database Migration & Setup
 
+#### For New Database (First Time Setup):
 ```bash
-# Generate Prisma client
+# 1. Set your production DATABASE_URL locally for migration
+export DATABASE_URL="your_production_database_url"
+
+# 2. Generate Prisma client
 npx prisma generate
 
-# Push database schema
+# 3. Push database schema to production database
 npx prisma db push
 
-# (Optional) Seed database
+# 4. (Optional) Seed database with initial data
 npx prisma db seed
+```
+
+#### For Existing Database (Schema Updates):
+```bash
+# 1. Create migration files
+npx prisma migrate dev --name your_migration_name
+
+# 2. Deploy migrations to production
+npx prisma migrate deploy
+```
+
+#### Vercel Build Configuration:
+Add to your `package.json` for automatic Prisma generation:
+```json
+{
+  "scripts": {
+    "build": "prisma generate && next build",
+    "postinstall": "prisma generate"
+  }
+}
+```
+
+#### Database Seeding for Production:
+Create `prisma/seed.ts` for initial data:
+```typescript
+import { PrismaClient } from '@prisma/client'
+import { hashPassword } from '../src/lib/auth'
+
+const prisma = new PrismaClient()
+
+async function main() {
+  // Create admin user
+  const hashedPassword = await hashPassword('admin123')
+
+  await prisma.user.upsert({
+    where: { username: 'admin' },
+    update: {},
+    create: {
+      username: 'admin',
+      password: hashedPassword,
+      role: 'ADMIN',
+      name: 'Administrator'
+    }
+  })
+
+  // Create sample class
+  await prisma.class.upsert({
+    where: { name: 'Kelas 1A' },
+    update: {},
+    create: {
+      name: 'Kelas 1A',
+      studentCount: 0
+    }
+  })
+}
+
+main()
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })
 ```
 
 ### 3. Deploy
