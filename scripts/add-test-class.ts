@@ -10,21 +10,14 @@ async function addTestClass() {
     const testClass = await prisma.class.create({
       data: {
         id: `test-delete-${Date.now()}`,
-        name: '7C',
-        grade: 7,
-        section: 'C',
-        teacherId: 'test-teacher-001',
-        teacherName: 'Pak Test Teacher, S.Pd',
-        studentCount: 0,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        name: 'Kelas 7C',
+        studentCount: 0
       }
     });
 
     console.log('✅ Test class created successfully!');
     console.log(`   - ID: ${testClass.id}`);
     console.log(`   - Name: ${testClass.name}`);
-    console.log(`   - Teacher: ${testClass.teacherName}`);
     console.log(`   - Student Count: ${testClass.studentCount}`);
     console.log('\n🎮 You can now test the delete function in the web interface!');
     console.log('   1. Go to /kelola-kelas');

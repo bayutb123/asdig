@@ -8,8 +8,7 @@ async function listClasses() {
 
     const classes = await prisma.class.findMany({
       orderBy: [
-        { grade: 'asc' },
-        { section: 'asc' }
+        { name: 'asc' }
       ],
       include: {
         _count: {
@@ -24,9 +23,8 @@ async function listClasses() {
       const studentCount = cls._count.students;
       const canDelete = studentCount === 0 ? '✅ Can Delete' : '❌ Has Students';
       
-      console.log(`${index + 1}. ${cls.name} (Grade ${cls.grade}${cls.section})`);
+      console.log(`${index + 1}. ${cls.name}`);
       console.log(`   - ID: ${cls.id}`);
-      console.log(`   - Teacher: ${cls.teacherName}`);
       console.log(`   - Students: ${studentCount} ${canDelete}`);
       console.log('');
     });

@@ -144,11 +144,7 @@ async function migrateData() {
         data: {
           id: classItem.id,
           name: classItem.name,
-          grade: classItem.grade,
-          section: classItem.section,
-          teacherId: classItem.teacherId,
-          teacherName: classItem.teacherName,
-          studentCount: classItem.studentCount,
+          studentCount: classItem.studentCount || 0,
         },
       })
     }

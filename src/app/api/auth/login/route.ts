@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { verifyPassword, generateToken } from '@/lib/auth'
 
+// Type definitions for raw SQL queries
+interface UserQueryResult {
+  id: string
+  name: string
+  username: string
+  password: string
+  role: 'ADMIN' | 'TEACHER'
+  classId: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+interface ClassQueryResult {
+  id: string
+  name: string
+  studentCount: number
+  createdAt: Date
+  updatedAt: Date
+}
+
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   console.log('🚀 LOGIN ATTEMPT STARTED', {
@@ -84,27 +104,45 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find user by username
+    // Find user by username using raw SQL (to avoid Prisma client schema mismatch)
     console.log('🔍 Searching for user in database...');
     let user;
+    let userClass = null;
     try {
-      user = await prisma.user.findUnique({
-        where: { username },
-        include: {
-          class: true,
-        },
-      });
+      // Use raw SQL to find user
+      const users = await prisma.$queryRaw`
+        SELECT id, name, username, password, role, "classId", "createdAt", "updatedAt"
+        FROM users
+        WHERE username = ${username}
+      ` as UserQueryResult[];
+
       console.log('✅ Database query completed');
-      console.log('👤 User found:', !!user);
-      if (user) {
+      console.log('👤 User found:', users.length > 0);
+
+      if (users.length > 0) {
+        user = users[0];
         console.log('📊 User details:', {
           id: user.id,
           username: user.username,
           role: user.role,
-          hasClass: !!user.class,
           classId: user.classId,
           createdAt: user.createdAt
         });
+
+        // Get class information if user has a classId
+        if (user.classId) {
+          console.log('🔍 Getting class information...');
+          const classes = await prisma.$queryRaw`
+            SELECT id, name, "studentCount", "createdAt", "updatedAt"
+            FROM classes
+            WHERE id = ${user.classId}
+          ` as ClassQueryResult[];
+
+          if (classes.length > 0) {
+            userClass = classes[0];
+            console.log('✅ Class found:', userClass.name);
+          }
+        }
       }
     } catch (dbQueryError) {
       console.error('❌ Database query failed:', dbQueryError);
@@ -166,7 +204,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Return user data (without password) and token
-    const { password: _password, ...userWithoutPassword } = user;
+    const userResponse = {
+      id: user.id,
+      name: user.name,
+      username: user.username,
+      role: user.role,
+      classId: user.classId,
+      className: userClass?.name || null,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt
+    };
 
     console.log('🎉 LOGIN SUCCESSFUL', {
       userId: user.id,
@@ -177,7 +224,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      user: userWithoutPassword,
+      user: userResponse,
       token,
     })
   } catch (error) {
