@@ -16,11 +16,12 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
   const selectedDate = new Date().toISOString().split('T')[0];
 
   // All hooks must be called before any early returns
-  // Use React Query hooks for data fetching
-  const { data: studentsData, isLoading: studentsLoading } = useStudents(user?.classId);
+  // Use React Query hooks for data fetching - only enabled when user is authenticated
+  const { data: studentsData, isLoading: studentsLoading } = useStudents(user?.classId, !!user);
   const { isLoading: attendanceLoading } = useAttendance({
     classId: user?.classId,
-    date: selectedDate
+    date: selectedDate,
+    enabled: !!user // Only make API calls when user is authenticated
   });
 
   // State for editing

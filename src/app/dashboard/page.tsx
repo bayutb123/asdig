@@ -210,8 +210,8 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Attendance Table */}
-        <AttendanceTable headingLevel="h2" />
+        {/* Attendance Table - Only render when user is fully authenticated */}
+        {user && <AttendanceTable headingLevel="h2" />}
       </main>
       </StableContainer>
     </ProtectedRoute>

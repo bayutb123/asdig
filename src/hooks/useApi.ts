@@ -287,10 +287,11 @@ export function useDeleteClass() {
 }
 
 // Students hooks
-export function useStudents(classId?: string) {
+export function useStudents(classId?: string, enabled: boolean = true) {
   return useQuery({
     queryKey: ['students', classId],
     queryFn: () => apiClient.getStudents(classId),
+    enabled: enabled,
   })
 }
 

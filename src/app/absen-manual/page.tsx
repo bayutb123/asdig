@@ -39,7 +39,8 @@ export default function ManualAttendancePage() {
 
   // API queries - only run if we have a classId and user is loaded
   const { data: studentsData, isLoading: studentsLoading, error: studentsError } = useStudents(
-    classId && user ? classId : undefined
+    classId && user ? classId : undefined,
+    !!classId && !!user // Only enabled when we have both classId and user
   )
 
   const { data: attendanceData, refetch: attendanceRefetch } = useAttendance({
