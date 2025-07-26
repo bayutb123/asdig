@@ -14,6 +14,8 @@
     "delete-all-students": "node scripts/delete-all-students.js",
     "delete-all-students:dry": "node scripts/delete-all-students.js --dry-run",
     "delete-all-students:confirm": "node scripts/delete-all-students.js --confirm",
+    "test-login": "node scripts/test-login-api.js",
+    "test-login:vercel": "node scripts/test-login-api.js https://asdig.vercel.app",
     "analyze": "ANALYZE=true npm run build",
     "type-check": "tsc --noEmit",
     "db:generate": "prisma generate",

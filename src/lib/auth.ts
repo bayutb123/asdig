@@ -38,18 +38,58 @@ export async function hashPassword(password: string): Promise<string> {
 
 // Verify password (server-side only)
 export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+  console.log('🔐 verifyPassword called', {
+    hasPassword: !!password,
+    passwordLength: password?.length,
+    hasHashedPassword: !!hashedPassword,
+    hashedPasswordLength: hashedPassword?.length,
+    hashedPasswordPrefix: hashedPassword?.substring(0, 10)
+  });
+
   if (!bcrypt) {
+    console.error('❌ bcrypt not available on server side');
     throw new Error('bcrypt is only available on the server side')
   }
-  return bcrypt.compare(password, hashedPassword)
+
+  try {
+    const result = await bcrypt.compare(password, hashedPassword);
+    console.log('✅ bcrypt.compare completed, result:', result);
+    return result;
+  } catch (bcryptError) {
+    console.error('❌ bcrypt.compare failed:', bcryptError);
+    throw bcryptError;
+  }
 }
 
 // Generate JWT token (server-side only)
 export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
+  console.log('🎫 generateToken called', {
+    payload: {
+      userId: payload.userId,
+      username: payload.username,
+      role: payload.role,
+      classId: payload.classId
+    },
+    jwtSecretLength: JWT_SECRET.length,
+    expiresIn: JWT_EXPIRES_IN
+  });
+
   if (!jwt) {
+    console.error('❌ JWT not available on server side');
     throw new Error('JWT generation is only available on the server side')
   }
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN })
+
+  try {
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    console.log('✅ JWT token generated successfully', {
+      tokenLength: token.length,
+      tokenPrefix: token.substring(0, 20) + '...'
+    });
+    return token;
+  } catch (jwtError) {
+    console.error('❌ JWT generation failed:', jwtError);
+    throw jwtError;
+  }
 }
 
 // Verify JWT token (server-side only)
