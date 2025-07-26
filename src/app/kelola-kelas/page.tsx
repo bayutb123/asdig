@@ -9,11 +9,11 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import type { ApiErrorResponse, FormErrors } from '@/types/api';
 
 export default function KelolaKelasPage() {
-  const { user, hasAdminAccess } = useAuth();
+  const { user, hasAdminAccess, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  // API hooks - only enabled when user is authenticated
-  const { data: classesData, isLoading: classesLoading } = useClasses(!!user);
+  // API hooks - only enabled when user is authenticated AND auth is not loading
+  const { data: classesData, isLoading: classesLoading } = useClasses(!authLoading && !!user);
   const deleteClassMutation = useDeleteClass();
   const createClassMutation = useCreateClass();
 

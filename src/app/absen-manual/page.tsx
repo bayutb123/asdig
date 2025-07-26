@@ -15,7 +15,7 @@ interface StudentWithAttendance extends Student {
 }
 
 export default function ManualAttendancePage() {
-  const { user } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
 
   // State management
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
@@ -37,16 +37,16 @@ export default function ManualAttendancePage() {
     shouldCallAttendanceAPI: !!(classId && selectedDate && user)
   })
 
-  // API queries - only run if we have a classId and user is loaded
+  // API queries - only run if we have a classId and user is loaded AND auth is not loading
   const { data: studentsData, isLoading: studentsLoading, error: studentsError } = useStudents(
     classId && user ? classId : undefined,
-    !!classId && !!user // Only enabled when we have both classId and user
+    !authLoading && !!classId && !!user // Only enabled when auth is complete and we have both classId and user
   )
 
   const { data: attendanceData, refetch: attendanceRefetch } = useAttendance({
     classId: classId || '',
     date: selectedDate,
-    enabled: !!classId && !!selectedDate && !!user
+    enabled: !authLoading && !!classId && !!selectedDate && !!user
   })
 
   const createAttendanceMutation = useCreateAttendance()

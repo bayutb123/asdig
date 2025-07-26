@@ -18,11 +18,11 @@ interface AttendanceReport {
 }
 
 export default function LaporanAbsenPage() {
-  const { user, hasAdminAccess, hasTeacherAccess } = useAuth();
+  const { user, hasAdminAccess, hasTeacherAccess, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  // React Query hooks for data fetching - only enabled when user is authenticated
-  const { data: classesData, isLoading: classesLoading } = useClasses(!!user);
+  // React Query hooks for data fetching - only enabled when user is authenticated AND auth is not loading
+  const { data: classesData, isLoading: classesLoading } = useClasses(!authLoading && !!user);
   const classes = classesData?.classes || [];
 
   const [loading, setLoading] = useState(true);

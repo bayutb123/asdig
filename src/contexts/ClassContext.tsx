@@ -27,14 +27,16 @@ interface ClassProviderProps {
 }
 
 export function ClassProvider({ children }: ClassProviderProps) {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
 
-  // Use React Query hooks for data fetching - only enabled when user is authenticated
-  const { data: classesData, isLoading: classesLoading, refetch: refetchClasses } = useClasses(!!user);
+  // Use React Query hooks for data fetching - only enabled when user is authenticated AND auth is not loading
+  const { data: classesData, isLoading: classesLoading, refetch: refetchClasses } = useClasses(
+    !authLoading && !!user
+  );
 
-  // Only fetch users if the current user is an admin
+  // Only fetch users if the current user is an admin AND auth is not loading
   const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useUsers({
-    enabled: user?.role === 'ADMIN'
+    enabled: !authLoading && user?.role === 'ADMIN'
   });
 
   const classes = classesData?.classes || [];

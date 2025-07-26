@@ -12,16 +12,19 @@ interface AttendanceTableProps {
 }
 
 export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTableProps) {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const selectedDate = new Date().toISOString().split('T')[0];
 
   // All hooks must be called before any early returns
-  // Use React Query hooks for data fetching - only enabled when user is authenticated
-  const { data: studentsData, isLoading: studentsLoading } = useStudents(user?.classId, !!user);
+  // Use React Query hooks for data fetching - only enabled when user is authenticated AND auth is not loading
+  const { data: studentsData, isLoading: studentsLoading } = useStudents(
+    user?.classId,
+    !authLoading && !!user
+  );
   const { isLoading: attendanceLoading } = useAttendance({
     classId: user?.classId,
     date: selectedDate,
-    enabled: !!user // Only make API calls when user is authenticated
+    enabled: !authLoading && !!user // Only make API calls when user is authenticated AND auth is not loading
   });
 
   // State for editing
