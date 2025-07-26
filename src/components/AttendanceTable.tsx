@@ -5,6 +5,7 @@ import {useAuth} from '@/contexts/AuthContext';
 import { LoadingPlaceholder } from './LayoutStable';
 import { Student } from '@/services/dataService';
 import { useStudents, useAttendance } from '@/hooks/useApi';
+import Link from 'next/link';
 
 interface AttendanceTableProps {
   headingLevel?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
@@ -14,12 +15,62 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
   const { user } = useAuth();
   const selectedDate = new Date().toISOString().split('T')[0];
 
+  // All hooks must be called before any early returns
   // Use React Query hooks for data fetching
   const { data: studentsData, isLoading: studentsLoading } = useStudents(user?.classId);
   const { isLoading: attendanceLoading } = useAttendance({
     classId: user?.classId,
     date: selectedDate
   });
+
+  // State for editing
+  const [editingStudent, setEditingStudent] = useState<string | null>(null);
+  const [tempStatus, setTempStatus] = useState<Student['status']>('HADIR');
+  const [tempCheckInTime, setTempCheckInTime] = useState<string>('');
+
+  // Filter states for public view
+  const [filterClass, setFilterClass] = useState<string>('Semua');
+  const [filterStatus, setFilterStatus] = useState<string>('Semua');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+
+  // If user is not authenticated, show landing page with login button
+  if (!user) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+          <div className="mb-8">
+            <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Sistem Absensi Digital
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Silakan login untuk melihat data absensi siswa
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <Link
+              href="/login"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg hover:shadow-xl"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1" />
+              </svg>
+              Login Wali Kelas
+            </Link>
+
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              <p>Akses khusus untuk wali kelas dan admin sekolah</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const students = studentsData?.data || [];
   const loading = studentsLoading || attendanceLoading;
@@ -30,14 +81,6 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
                                headingLevel === 'h2' ? 'h3' :
                                headingLevel === 'h3' ? 'h4' :
                                headingLevel === 'h4' ? 'h5' : 'h6';
-  const [editingStudent, setEditingStudent] = useState<string | null>(null);
-  const [tempStatus, setTempStatus] = useState<Student['status']>('HADIR');
-  const [tempCheckInTime, setTempCheckInTime] = useState<string>('');
-
-  // Filter states for public view
-  const [filterClass, setFilterClass] = useState<string>('Semua');
-  const [filterStatus, setFilterStatus] = useState<string>('Semua');
-  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Data is now loaded via React Query hooks above
 
