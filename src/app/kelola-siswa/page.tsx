@@ -67,12 +67,12 @@ export default function StudentManagementPage() {
     }
   }, [user, authLoading, router]);
 
-  // Load data
+  // Load data - only when user is authenticated and not loading
   useEffect(() => {
-    if (user?.role === 'ADMIN') {
+    if (!authLoading && user?.role === 'ADMIN') {
       loadData();
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   const loadData = async () => {
     try {

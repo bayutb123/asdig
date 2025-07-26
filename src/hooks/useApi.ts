@@ -255,10 +255,11 @@ export function useCreateUser() {
 }
 
 // Classes hooks
-export function useClasses() {
+export function useClasses(enabled: boolean = true) {
   return useQuery({
     queryKey: ['classes'],
     queryFn: () => apiClient.getClasses(),
+    enabled: enabled,
   })
 }
 

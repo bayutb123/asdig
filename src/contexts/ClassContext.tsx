@@ -29,8 +29,8 @@ interface ClassProviderProps {
 export function ClassProvider({ children }: ClassProviderProps) {
   const { user } = useAuth();
 
-  // Use React Query hooks for data fetching
-  const { data: classesData, isLoading: classesLoading, refetch: refetchClasses } = useClasses();
+  // Use React Query hooks for data fetching - only enabled when user is authenticated
+  const { data: classesData, isLoading: classesLoading, refetch: refetchClasses } = useClasses(!!user);
 
   // Only fetch users if the current user is an admin
   const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useUsers({

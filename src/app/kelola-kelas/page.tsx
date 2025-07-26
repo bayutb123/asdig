@@ -12,8 +12,8 @@ export default function KelolaKelasPage() {
   const { user, hasAdminAccess } = useAuth();
   const router = useRouter();
 
-  // API hooks
-  const { data: classesData, isLoading: classesLoading } = useClasses();
+  // API hooks - only enabled when user is authenticated
+  const { data: classesData, isLoading: classesLoading } = useClasses(!!user);
   const deleteClassMutation = useDeleteClass();
   const createClassMutation = useCreateClass();
 

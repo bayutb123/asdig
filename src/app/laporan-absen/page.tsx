@@ -21,8 +21,8 @@ export default function LaporanAbsenPage() {
   const { user, hasAdminAccess, hasTeacherAccess } = useAuth();
   const router = useRouter();
 
-  // React Query hooks for data fetching
-  const { data: classesData, isLoading: classesLoading } = useClasses();
+  // React Query hooks for data fetching - only enabled when user is authenticated
+  const { data: classesData, isLoading: classesLoading } = useClasses(!!user);
   const classes = classesData?.classes || [];
 
   const [loading, setLoading] = useState(true);
