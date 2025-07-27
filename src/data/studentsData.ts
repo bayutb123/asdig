@@ -18,7 +18,7 @@ export interface Student {
   notes?: string; // Optional for attendance notes
 }
 
-export interface StudentsDataStructure {
+interface StudentsDataStructure {
   metadata: {
     totalStudents: number;
     totalClasses: number;
@@ -34,8 +34,8 @@ const loadedData = studentsDataJSON as StudentsDataStructure;
 // Export the students data from JSON
 export const allStudentsData: Student[] = loadedData.students;
 
-// Export metadata
-export const studentsMetadata = loadedData.metadata;
+// Internal metadata (not exported)
+const studentsMetadata = loadedData.metadata;
 // Helper function to get students by class
 export const getStudentsByClass = (className: string): Student[] => {
   return allStudentsData.filter(student => student.class === className);
@@ -46,36 +46,14 @@ export const getStudentById = (id: string): Student | undefined => {
   return allStudentsData.find(student => student.id === id);
 };
 
-// Helper function to get all classes
-export const getAllClasses = (): string[] => {
+// Helper function to get all class names as strings
+const getAllClassNames = (): string[] => {
   const classes = [...new Set(allStudentsData.map(student => student.class))];
   return classes.sort();
 };
 
-// Helper function to get total students count
-export const getTotalStudents = (): number => {
-  return allStudentsData.length;
-};
-
-// Helper function to get students count by class
-export const getStudentsCountByClass = (className: string): number => {
-  return getStudentsByClass(className).length;
-};
-
 if (process.env.NODE_ENV === 'development') {
   console.log(`Loaded ${allStudentsData.length} students from JSON data`);
-  console.log(`Classes: ${getAllClasses().join(', ')}`);
+  console.log(`Classes: ${getAllClassNames().join(', ')}`);
   console.log(`Students per class: ${studentsMetadata.studentsPerClass}`);
 }
-
-// Helper function to get class statistics
-export const getClassStatistics = (className: string) => {
-  const classStudents = getStudentsByClass(className);
-  return {
-    total: classStudents.length,
-    present: classStudents.filter(s => s.status === 'Hadir').length,
-    absent: classStudents.filter(s => s.status === 'Tidak Hadir').length,
-    late: classStudents.filter(s => s.status === 'Terlambat').length,
-    excused: classStudents.filter(s => s.status === 'Izin').length
-  };
-};
