@@ -1,7 +1,12 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { ClassInfo, Teacher, getAllClasses, getAllTeachers } from '@/data/classesData';
+import { createContext, useContext, useCallback, useEffect, ReactNode } from 'react';
+import { ClassInfo, User } from '@/services/dataService';
+import { useClasses, useUsers } from '@/hooks/useApi';
+import { useAuth } from '@/contexts/AuthContext';
+
+// Type alias for backward compatibility
+type Teacher = User & { role: 'TEACHER' }
 
 interface ClassContextType {
   classes: ClassInfo[];
@@ -12,6 +17,7 @@ interface ClassContextType {
   getClassById: (classId: string) => ClassInfo | undefined;
   getTeacherByClassId: (classId: string) => Teacher | undefined;
   refreshData: () => void;
+  isLoading: boolean;
 }
 
 const ClassContext = createContext<ClassContextType | undefined>(undefined);
@@ -21,13 +27,29 @@ interface ClassProviderProps {
 }
 
 export function ClassProvider({ children }: ClassProviderProps) {
-  const [classes, setClasses] = useState<ClassInfo[]>([]);
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const { user, isLoading: authLoading } = useAuth();
+
+  // Use React Query hooks for data fetching - only enabled when user is authenticated AND auth is not loading
+  const { data: classesData, isLoading: classesLoading, refetch: refetchClasses } = useClasses(
+    !authLoading && !!user
+  );
+
+  // Only fetch users if the current user is an admin AND auth is not loading
+  const { data: usersData, isLoading: usersLoading, refetch: refetchUsers } = useUsers({
+    enabled: !authLoading && user?.role === 'ADMIN'
+  });
+
+  const classes = classesData?.classes || [];
+  const teachers = (usersData?.users || []).filter(user => user.role === 'TEACHER') as Teacher[];
+  const isLoading = classesLoading || (user?.role === 'ADMIN' ? usersLoading : false);
 
   const refreshData = useCallback(() => {
-    setClasses(getAllClasses());
-    setTeachers(getAllTeachers());
-  }, []);
+    refetchClasses();
+    // Only refetch users if the current user is an admin
+    if (user?.role === 'ADMIN') {
+      refetchUsers();
+    }
+  }, [refetchClasses, refetchUsers, user?.role]);
 
   // Load initial data
   useEffect(() => {
@@ -54,13 +76,12 @@ export function ClassProvider({ children }: ClassProviderProps) {
       id: newTeacherId,
       classId: newClassId,
       username: `walikelas${classData.grade}${classData.section.toLowerCase()}`,
-      password: 'password123',
       subject: 'Guru Kelas',
     };
 
-    // Update state
-    setClasses(prev => [...prev, newClass]);
-    setTeachers(prev => [...prev, newTeacher]);
+    // TODO: Implement with API calls using React Query mutations
+    // For now, just refresh data to simulate addition
+    refreshData();
 
     // In a real application, you would make API calls here
     console.log('New class added:', newClass);
@@ -68,26 +89,20 @@ export function ClassProvider({ children }: ClassProviderProps) {
   }, [classes.length, teachers.length]);
 
   const updateClass = useCallback((classId: string, classData: Partial<ClassInfo>) => {
-    setClasses(prev =>
-      prev.map(cls =>
-        cls.id === classId ? { ...cls, ...classData } : cls
-      )
-    );
-
-    // In a real application, you would make an API call here
+    // TODO: Implement with API calls using React Query mutations
     console.log('Class updated:', classId, classData);
-  }, []);
+    // This would use useUpdateClass mutation
+    // For now, just refresh data to simulate update
+    refreshData();
+  }, [refreshData]);
 
   const deleteClass = useCallback((classId: string) => {
-    // Remove class
-    setClasses(prev => prev.filter(cls => cls.id !== classId));
-
-    // Remove associated teacher
-    setTeachers(prev => prev.filter(teacher => teacher.classId !== classId));
-
-    // In a real application, you would make API calls here
-    console.log('Class deleted:', classId);
-  }, []);
+    // TODO: Implement with API calls using React Query mutations
+    console.log('Delete class:', classId);
+    // This would use useDeleteClass mutation
+    // For now, just refresh data to simulate deletion
+    refreshData();
+  }, [refreshData]);
 
   const getClassById = useCallback((classId: string): ClassInfo | undefined => {
     return classes.find(cls => cls.id === classId);
@@ -106,6 +121,7 @@ export function ClassProvider({ children }: ClassProviderProps) {
     getClassById,
     getTeacherByClassId,
     refreshData,
+    isLoading,
   };
 
   return (

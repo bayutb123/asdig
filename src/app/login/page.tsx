@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { getAllTeachers, getAllAdmins } from '@/data/classesData';
+// Data is now handled through the AuthContext and API
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -47,25 +47,22 @@ export default function LoginPage() {
     setIsLoading(true);
     setError('');
 
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      // Check credentials using new API-based authentication
+      const loginSuccess = await login(formData.username, formData.password);
 
-    // Check credentials using centralized validation
-    const loginSuccess = login(formData.username, formData.password);
-
-    if (loginSuccess) {
-      // Redirect to dashboard with error handling
-      try {
-        router.push('/dashboard');
-      } catch (error) {
-        console.error('Navigation error:', error);
-        // Fallback navigation
+      if (loginSuccess) {
+        // Use window.location for more reliable redirect
         if (typeof window !== 'undefined') {
           window.location.href = '/dashboard';
         }
+        return; // Exit early to prevent setting loading to false
+      } else {
+        setError('Username atau password salah. Silakan coba lagi.');
       }
-    } else {
-      setError('Username atau password salah. Silakan coba lagi.');
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Terjadi kesalahan saat login. Silakan coba lagi.');
     }
 
     setIsLoading(false);
@@ -176,26 +173,12 @@ export default function LoginPage() {
           {/* Demo Credentials */}
           <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-md">
             <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Demo Akun Admin (Tata Usaha):
-            </h3>
-            <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1 mb-4">
-              {getAllAdmins().map((admin) => (
-                <p key={admin.id}>
-                  <strong>Username:</strong> {admin.username} | <strong>Password:</strong> {admin.password} | <strong>Jabatan:</strong> {admin.position}
-                </p>
-              ))}
-            </div>
-
-            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Demo Akun Guru Kelas SD:
+              Demo Akun:
             </h3>
             <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-              {getAllTeachers().slice(0, 4).map((teacher) => (
-                <p key={teacher.id}>
-                  <strong>Username:</strong> {teacher.username} | <strong>Password:</strong> {teacher.password} | <strong>Kelas:</strong> {teacher.className}
-                </p>
-              ))}
-              <p className="text-gray-500 italic">... dan 8 akun guru lainnya</p>
+              <p><strong>Admin:</strong> admin / admin123</p>
+              <p><strong>Teacher:</strong> walikelas1a / password123</p>
+              <p className="text-gray-500 italic">Note: All teacher accounts follow pattern: walikelas[class] / password123</p>
             </div>
           </div>
 

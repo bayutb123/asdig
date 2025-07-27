@@ -4,11 +4,15 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { getStudentsByClass } from '@/data/studentsData';
-import {
-  getAttendanceByClassAndDateRange,
-  getAvailableDates
-} from '@/data/attendanceData';
+// Data service imports available for future use
+// Date utilities are available but not used in this component yet
+// import {
+//   getCurrentDateISO,
+//   formatDateIndonesian,
+//   formatTimeIndonesian,
+//   getDateRange as getDateRangeUtil,
+//   isValidDateString
+// } from '@/utils/dateUtils';
 
 interface StudentAttendanceData {
   studentId: string;
@@ -22,7 +26,29 @@ interface StudentAttendanceData {
 }
 
 export default function CetakAbsenPage() {
-  const { teacher, admin, hasTeacherAccess } = useAuth();
+  const { user, hasAdminAccess, hasTeacherAccess } = useAuth();
+
+  // Helper functions for mock data
+  const getAvailableDates = (): string[] => {
+    const dates: string[] = [];
+    const today = new Date();
+    for (let i = 30; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      dates.push(date.toISOString().split('T')[0]);
+    }
+    return dates;
+  };
+
+  const getStudentsByClass = (_classId: string) => {
+    // Mock data - in real implementation, this would fetch from API
+    return [] as Array<{ name: string; id: string; nisn: string }>;
+  };
+
+  const getAttendanceByClassAndDateRange = (_classId: string, _startDate: string, _endDate: string) => {
+    // Mock data - in real implementation, this would fetch from API
+    return [] as Array<{ studentName: string; date: string; status: string; checkInTime?: string; notes?: string }>;
+  };
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [loading, setLoading] = useState(true);
@@ -31,7 +57,7 @@ export default function CetakAbsenPage() {
 
   // Initialize dates
   useEffect(() => {
-    if (hasTeacherAccess && teacher?.className) {
+    if (hasTeacherAccess && user?.classId) {
       const availableDates = getAvailableDates();
       if (availableDates.length > 0) {
         // Default to last 10 school days (about 2 weeks)
@@ -42,17 +68,17 @@ export default function CetakAbsenPage() {
       }
       setLoading(false);
     }
-  }, [teacher, hasTeacherAccess]);
+  }, [user, hasTeacherAccess]);
 
   // Define loadAttendanceData function
   const loadAttendanceData = useCallback(() => {
-    if (!teacher?.className) return;
+    if (!user?.classId) return;
 
     // Get students for the class
-    const classStudents = getStudentsByClass(teacher.className);
-    
+    const classStudents = getStudentsByClass(user.classId);
+
     // Get attendance records for the date range
-    const attendanceRecords = getAttendanceByClassAndDateRange(teacher.className, startDate, endDate);
+    const attendanceRecords = getAttendanceByClassAndDateRange(user.classId, startDate, endDate);
     
     // Get all dates in the range
     const dates = getDateRange(startDate, endDate);
@@ -73,7 +99,7 @@ export default function CetakAbsenPage() {
         
         attendanceByDate[date] = {
           status: record?.status || 'Tidak Hadir',
-          timeIn: record?.timeIn,
+          timeIn: record?.checkInTime,
           notes: record?.notes
         };
       });
@@ -87,14 +113,14 @@ export default function CetakAbsenPage() {
     });
     
     setAttendanceData(processedData);
-  }, [teacher, startDate, endDate]);
+  }, [user, startDate, endDate]);
 
   // Load attendance data when dates change
   useEffect(() => {
-    if (startDate && endDate && teacher?.className) {
+    if (startDate && endDate && user?.classId) {
       loadAttendanceData();
     }
-  }, [startDate, endDate, teacher, loadAttendanceData]);
+  }, [startDate, endDate, user, loadAttendanceData]);
 
   const getDateRange = (start: string, end: string): string[] => {
     const dates: string[] = [];
@@ -117,7 +143,7 @@ export default function CetakAbsenPage() {
   };
 
   const printAttendanceList = () => {
-    if (!teacher?.className || attendanceData.length === 0) return;
+    if (!user?.classId || attendanceData.length === 0) return;
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
@@ -160,7 +186,7 @@ export default function CetakAbsenPage() {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Daftar Absensi Siswa - Kelas ${teacher.className}</title>
+        <title>Daftar Absensi Siswa - Kelas ${user.classId}</title>
         <style>
           @media print {
             @page {
@@ -301,7 +327,7 @@ export default function CetakAbsenPage() {
       <body>
         <div class="header">
           <h1>DAFTAR ABSENSI SISWA</h1>
-          <h2>Kelas ${teacher.className} - ${teacher.name}</h2>
+          <h2>Kelas ${user.classId} - ${user.name}</h2>
           <p>Periode: ${new Date(startDate).toLocaleDateString('id-ID')} - ${new Date(endDate).toLocaleDateString('id-ID')}</p>
           <p>Tanggal Cetak: ${printDate}, ${printTime}</p>
         </div>
@@ -425,7 +451,7 @@ export default function CetakAbsenPage() {
     );
   }
 
-  if (admin || !hasTeacherAccess || !teacher) {
+  if (hasAdminAccess || !hasTeacherAccess || !user) {
     return (
       <ProtectedRoute>
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
@@ -464,10 +490,10 @@ export default function CetakAbsenPage() {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  Cetak Daftar Absensi - Kelas {teacher.className}
+                  Cetak Daftar Absensi - Kelas {user.classId}
                 </h1>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {teacher.name} - Cetak daftar absensi untuk beberapa hari
+                  {user.name} - Cetak daftar absensi untuk beberapa hari
                 </p>
               </div>
             </div>

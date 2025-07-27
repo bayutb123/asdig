@@ -1,28 +1,35 @@
 'use client';
 
-import {useEffect, useState} from 'react';
+import {useState} from 'react';
 import {useAuth} from '@/contexts/AuthContext';
 import { LoadingPlaceholder } from './LayoutStable';
-import {allStudentsData, getStudentsByClass, Student} from '@/data/studentsData';
-import {getAttendanceByClassAndDate} from '@/data/attendanceData';
+import { Student } from '@/services/dataService';
+import { useStudents, useAttendance } from '@/hooks/useApi';
+import Link from 'next/link';
 
 interface AttendanceTableProps {
   headingLevel?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
 }
 
 export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTableProps) {
-  const { teacher } = useAuth();
-  const [students, setStudents] = useState<Student[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const { user, isLoading: authLoading } = useAuth();
+  const selectedDate = new Date().toISOString().split('T')[0];
 
-  // Dynamic heading components for proper hierarchy
-  const FilterHeadingComponent = headingLevel;
-  const TableHeadingComponent = headingLevel === 'h1' ? 'h2' :
-                               headingLevel === 'h2' ? 'h3' :
-                               headingLevel === 'h3' ? 'h4' :
-                               headingLevel === 'h4' ? 'h5' : 'h6';
+  // All hooks must be called before any early returns
+  // Use React Query hooks for data fetching - only enabled when user is authenticated AND auth is not loading
+  const { data: studentsData, isLoading: studentsLoading } = useStudents(
+    user?.classId,
+    !authLoading && !!user
+  );
+  const { isLoading: attendanceLoading } = useAttendance({
+    classId: user?.classId,
+    date: selectedDate,
+    enabled: !authLoading && !!user // Only make API calls when user is authenticated AND auth is not loading
+  });
+
+  // State for editing
   const [editingStudent, setEditingStudent] = useState<string | null>(null);
-  const [tempStatus, setTempStatus] = useState<Student['status']>('Hadir');
+  const [tempStatus, setTempStatus] = useState<Student['status']>('HADIR');
   const [tempCheckInTime, setTempCheckInTime] = useState<string>('');
 
   // Filter states for public view
@@ -30,54 +37,79 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
   const [filterStatus, setFilterStatus] = useState<string>('Semua');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Load students based on authentication state and merge with attendance data
-  useEffect(() => {
-    const loadStudentsWithAttendance = () => {
-      let baseStudents: Student[] = [];
+  // If user is not authenticated, show landing page with login button
+  if (!user) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
+          <div className="mb-8">
+            <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-10 h-10 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+              Sistem Absensi Digital
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Silakan login untuk melihat data absensi siswa
+            </p>
+          </div>
 
-      if (teacher?.className) {
-        // Teacher logged in: show only their class students
-        baseStudents = getStudentsByClass(teacher.className);
-      } else {
-        // No teacher logged in: show all students
-        baseStudents = allStudentsData;
-      }
+          <div className="space-y-4">
+            <Link
+              href="/login"
+              className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg hover:shadow-xl"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1" />
+              </svg>
+              Login Wali Kelas
+            </Link>
 
-      // Get today's date for attendance lookup (modern format)
-      const today = new Date().toLocaleDateString('sv-SE');
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              <p>Akses khusus untuk wali kelas dan admin sekolah</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-      // Merge students with today's attendance data
-      const studentsWithAttendance = baseStudents.map(student => {
-        // Get attendance records for this student's class and today's date
-        const attendanceRecords = getAttendanceByClassAndDate(student.class, today);
-        const attendanceRecord = attendanceRecords.find(record => record.studentName === student.name);
+  const students = studentsData?.data || [];
+  const loading = studentsLoading || attendanceLoading;
 
-        return {
-          ...student,
-          status: attendanceRecord?.status || student.status,
-          checkInTime: attendanceRecord?.timeIn || student.checkInTime,
-          notes: attendanceRecord?.notes || student.notes
-        };
-      });
+  // Dynamic heading components for proper hierarchy
+  const FilterHeadingComponent = headingLevel;
+  const TableHeadingComponent = headingLevel === 'h1' ? 'h2' :
+                               headingLevel === 'h2' ? 'h3' :
+                               headingLevel === 'h3' ? 'h4' :
+                               headingLevel === 'h4' ? 'h5' : 'h6';
 
-      setStudents(studentsWithAttendance);
-      setLoading(false);
-    };
+  // Data is now loaded via React Query hooks above
 
-    loadStudentsWithAttendance();
-  }, [teacher]);
+  // Convert status enum to display text
+  const getStatusText = (status: Student['status']) => {
+    switch (status) {
+      case 'HADIR': return 'Hadir';
+      case 'TIDAK_HADIR': return 'Tidak Hadir';
+      case 'TERLAMBAT': return 'Terlambat';
+      case 'IZIN': return 'Izin';
+      default: return status;
+    }
+  };
 
   // Dapatkan styling badge status
   const getStatusBadge = (status: Student['status']) => {
     const baseClasses = 'px-3 py-1 rounded-full text-sm font-medium';
     switch (status) {
-      case 'Hadir':
+      case 'HADIR':
         return `${baseClasses} bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200`;
-      case 'Tidak Hadir':
+      case 'TIDAK_HADIR':
         return `${baseClasses} bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200`;
-      case 'Terlambat':
+      case 'TERLAMBAT':
         return `${baseClasses} bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200`;
-      case 'Izin':
+      case 'IZIN':
         return `${baseClasses} bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200`;
       default:
         return `${baseClasses} bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200`;
@@ -85,15 +117,15 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
   };
 
   // Get unique classes for filter dropdown
-  const availableClasses = ['Semua', ...Array.from(new Set(allStudentsData.map(s => s.class)))];
+  const availableClasses = ['Semua', ...Array.from(new Set(students.map(s => s.className)))];
   const availableStatuses = ['Semua', 'Hadir', 'Tidak Hadir', 'Terlambat', 'Izin'];
 
   // Helper function to sort students by class then name
   const sortStudents = (studentList: Student[]) => {
     return studentList.sort((a, b) => {
       // First sort by class
-      if (a.class !== b.class) {
-        return a.class.localeCompare(b.class);
+      if (a.className !== b.className) {
+        return a.className.localeCompare(b.className);
       }
       // Then sort by student name
       return a.name.localeCompare(b.name);
@@ -101,14 +133,20 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
   };
 
   // Filter and sort students
-  const filteredStudents = teacher ?
+  // Ensure students have enrollmentStatus field (default to ACTIVE if missing)
+  const studentsWithEnrollmentStatus = students.map(student => ({
+    ...student,
+    enrollmentStatus: (student as Student & { enrollmentStatus?: string }).enrollmentStatus || 'ACTIVE'
+  })) as Student[];
+
+  const filteredStudents = user?.role === 'TEACHER' ?
     // Teacher view: just sort the students
-    sortStudents([...students]) :
+    sortStudents([...studentsWithEnrollmentStatus]) :
     // Public view: filter then sort
     (() => {
-      const filtered = students.filter(student => {
-        const classMatch = filterClass === 'Semua' || student.class === filterClass;
-        const statusMatch = filterStatus === 'Semua' || student.status === filterStatus;
+      const filtered = studentsWithEnrollmentStatus.filter(student => {
+        const classMatch = filterClass === 'Semua' || student.className === filterClass;
+        const statusMatch = filterStatus === 'Semua' || getStatusText(student.status) === filterStatus;
         const searchMatch = searchQuery === '' ||
           student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           student.nisn.toLowerCase().includes(searchQuery.toLowerCase());
@@ -135,46 +173,41 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
   const handleStatusChange = (newStatus: Student['status']) => {
     setTempStatus(newStatus);
 
-    // Jika status berubah ke "Hadir", otomatis set waktu masuk ke waktu sekarang
-    if (newStatus === 'Hadir' && !tempCheckInTime) {
+    // Jika status berubah ke "HADIR", otomatis set waktu masuk ke waktu sekarang
+    if (newStatus === 'HADIR' && !tempCheckInTime) {
       setTempCheckInTime(getCurrentTime());
     }
 
-    // Jika status bukan "Hadir" atau "Terlambat", hapus waktu
-    if (newStatus !== 'Hadir' && newStatus !== 'Terlambat') {
+    // Jika status bukan "HADIR" atau "TERLAMBAT", hapus waktu
+    if (newStatus !== 'HADIR' && newStatus !== 'TERLAMBAT') {
       setTempCheckInTime('');
     }
   };
 
   // Fungsi untuk menyimpan edit
   const saveEdit = (studentId: string) => {
-    setStudents(prev => prev.map(student => {
-      if (student.id === studentId) {
-          return {
-            ...student,
-            status: tempStatus,
-            checkInTime: (tempStatus === 'Hadir' || tempStatus === 'Terlambat') ? tempCheckInTime : undefined,
-        };
-      }
-      return student;
-    }));
+    // TODO: Implement API call to update attendance
+    console.log('Saving attendance for student:', studentId, {
+      status: tempStatus,
+      checkInTime: (tempStatus === 'HADIR' || tempStatus === 'TERLAMBAT') ? tempCheckInTime : undefined,
+    });
     setEditingStudent(null);
   };
 
   // Fungsi untuk membatalkan edit
   const cancelEdit = () => {
     setEditingStudent(null);
-    setTempStatus('Hadir');
+    setTempStatus('HADIR');
     setTempCheckInTime('');
   };
 
   // Hitung statistik
   const stats = {
     total: students.length,
-    present: students.filter(s => s.status === 'Hadir').length,
-    absent: students.filter(s => s.status === 'Tidak Hadir').length,
-    late: students.filter(s => s.status === 'Terlambat').length,
-    excused: students.filter(s => s.status === 'Izin').length
+    present: students.filter(s => s.status === 'HADIR').length,
+    absent: students.filter(s => s.status === 'TIDAK_HADIR').length,
+    late: students.filter(s => s.status === 'TERLAMBAT').length,
+    excused: students.filter(s => s.status === 'IZIN').length
   };
 
   // Show loading state to prevent layout shifts
@@ -215,7 +248,7 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
 
 
       {/* Filter untuk public view */}
-      {!teacher && (
+      {user?.role !== 'TEACHER' && (
         <div className="mb-6 bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
           <FilterHeadingComponent className="text-lg font-medium text-gray-900 dark:text-white mb-3">
             Filter & Cari Data Absensi
@@ -296,8 +329,8 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
             })}
           </TableHeadingComponent>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {teacher
-              ? `Menampilkan ${students.length} siswa kelas ${teacher.className}`
+            {user?.role === 'TEACHER'
+              ? `Menampilkan ${students.length} siswa kelas ${user.className}`
               : `Menampilkan ${filteredStudents.length} dari ${students.length} siswa`
             }
           </p>
@@ -312,9 +345,11 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
               <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">NISN</th>
               <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Nama</th>
               <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Kelas</th>
-              <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Status</th>
+              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider border-b border-gray-200 dark:border-gray-600">
+                Status Kehadiran
+              </th>
               <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Masuk</th>
-              {teacher && (
+              {user?.role === 'TEACHER' && (
                 <th className="text-left py-3 px-4 font-semibold text-gray-900 dark:text-white">Aksi</th>
               )}
             </tr>
@@ -332,10 +367,10 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
                   {student.name}
                 </td>
                 <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
-                  {student.class}
+                  {student.className}
                 </td>
                 <td className="py-3 px-4">
-                  {teacher && editingStudent === student.id ? (
+                  {user?.role === 'TEACHER' && editingStudent === student.id ? (
                     <div>
                       <label
                         htmlFor={`status-select-${student.id}`}
@@ -350,32 +385,32 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
                         className="text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-2 py-1"
                         aria-label={`Status kehadiran untuk ${student.name}`}
                       >
-                      <option value="Hadir">Hadir</option>
-                      <option value="Tidak Hadir">Tidak Hadir</option>
-                      <option value="Terlambat">Terlambat</option>
-                      <option value="Izin">Izin</option>
+                      <option value="HADIR">Hadir</option>
+                      <option value="TIDAK_HADIR">Tidak Hadir</option>
+                      <option value="TERLAMBAT">Terlambat</option>
+                      <option value="IZIN">Izin</option>
                     </select>
                     </div>
                   ) : (
                     <span className={getStatusBadge(student.status)}>
-                      {student.status}
+                      {getStatusText(student.status)}
                     </span>
                   )}
                 </td>
                 <td className="py-3 px-4 text-gray-600 dark:text-gray-300 font-mono">
-                  {teacher && editingStudent === student.id ? (
+                  {user?.role === 'TEACHER' && editingStudent === student.id ? (
                     <input
                       type="time"
                       value={tempCheckInTime}
                       onChange={(e) => setTempCheckInTime(e.target.value)}
-                      disabled={tempStatus !== 'Hadir' && tempStatus !== 'Terlambat'}
+                      disabled={tempStatus !== 'HADIR' && tempStatus !== 'TERLAMBAT'}
                       className="text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-2 py-1 disabled:bg-gray-100 dark:disabled:bg-gray-600"
                     />
                   ) : (
                     student.checkInTime || '-'
                   )}
                 </td>
-                {teacher && (
+                {user?.role === 'TEACHER' && (
                   <td className="py-3 px-4">
                     {editingStudent === student.id ? (
                       <div className="flex space-x-2">
@@ -420,7 +455,7 @@ export default function AttendanceTable({ headingLevel = 'h2' }: AttendanceTable
       {filteredStudents.length === 0 && (
         <div className="text-center py-8">
           <p className="text-gray-500 dark:text-gray-400">
-            {teacher
+            {user?.role === 'TEACHER'
               ? 'Tidak ada data siswa untuk kelas ini.'
               : 'Tidak ada siswa yang sesuai dengan filter yang dipilih.'
             }
