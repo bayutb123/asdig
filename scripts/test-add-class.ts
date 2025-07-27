@@ -118,9 +118,9 @@ async function testAddClassAPI() {
 
     if (dbClass) {
       console.log('✅ Class found in database:', dbClass.name)
-      console.log('   - Grade:', dbClass.grade)
-      console.log('   - Section:', dbClass.section)
-      console.log('   - Teacher:', dbClass.teacherName)
+      console.log('   - Grade:', (dbClass as any).grade)
+      console.log('   - Section:', (dbClass as any).section)
+      console.log('   - Teacher:', (dbClass as any).teacherName)
     } else {
       console.log('❌ Class not found in database')
     }

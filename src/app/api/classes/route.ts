@@ -17,7 +17,10 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               name: true,
+              nip: true,
               username: true,
+              phone: true,
+              email: true,
             },
           },
           _count: {

@@ -14,14 +14,22 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   name      String
+  nip       String   @unique
   username  String   @unique
   password  String   // Will be hashed with bcrypt
   role      UserRole
+  phone     String?
+  email     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Optional teacher assignment
-  classId String? @unique
+  // Teacher-specific fields
+  classId   String? @unique
+  className String?
+  subject   String?
+
+  // Admin-specific fields
+  position String?
 
   // Relations
   class Class? @relation(fields: [classId], references: [id], onDelete: SetNull)
@@ -33,6 +41,10 @@ model User {
 model Class {
   id           String @id @default(cuid())
   name         String @unique
+  grade        Int
+  section      String
+  teacherId    String @unique
+  teacherName  String
   studentCount Int    @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -47,17 +59,22 @@ model Class {
 
 // Student model
 model Student {
-  id          String   @id @default(cuid())
-  name        String
-  classId     String
-  nisn        String   @unique
-  gender      Gender
-  birthDate   String
-  address     String?
-  parentName  String?
-  parentPhone String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String           @id @default(cuid())
+  name             String
+  classId          String
+  className        String
+  nisn             String           @unique
+  gender           Gender
+  birthDate        String
+  address          String
+  parentName       String
+  parentPhone      String
+  enrollmentStatus EnrollmentStatus @default(ACTIVE)
+  status           AttendanceStatus @default(PRESENT)
+  checkInTime      String?
+  notes            String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   // Relations
   class             Class              @relation(fields: [classId], references: [id])
@@ -68,14 +85,18 @@ model Student {
 
 // Attendance Record model
 model AttendanceRecord {
-  id        String           @id @default(cuid())
-  studentId String
-  classId   String
-  date      String
-  status    AttendanceStatus
-  notes     String?
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  id          String           @id @default(cuid())
+  studentId   String
+  studentName String
+  classId     String
+  className   String
+  date        String
+  status      AttendanceStatus
+  checkInTime String?
+  notes       String?
+  reason      String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   // Relations
   student Student @relation(fields: [studentId], references: [id])
@@ -87,13 +108,13 @@ model AttendanceRecord {
 
 // Enums
 enum UserRole {
-  ADMIN
   TEACHER
+  ADMIN
 }
 
 enum Gender {
-  MALE
-  FEMALE
+  L // Laki-laki
+  P // Perempuan
 }
 
 enum AttendanceStatus {
@@ -102,4 +123,9 @@ enum AttendanceStatus {
   LATE
   SICK
   PERMISSION
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  INACTIVE
 }

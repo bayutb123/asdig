@@ -90,20 +90,24 @@ export async function GET(request: NextRequest) {
             name: true,
             nisn: true,
             gender: true,
+            className: true,
           },
         },
         class: {
           select: {
             id: true,
             name: true,
+            grade: true,
+            section: true,
+            teacherName: true,
 
           },
         },
       },
       orderBy: [
         { date: 'desc' },
-        { classId: 'asc' },
-        { studentId: 'asc' },
+        { className: 'asc' },
+        { studentName: 'asc' },
       ],
     })
 
@@ -121,7 +125,7 @@ export async function GET(request: NextRequest) {
           id: true,
           classId: true,
           date: true,
-          studentId: true,
+          studentName: true,
           status: true
         }
       });
@@ -151,14 +155,18 @@ export async function POST(request: NextRequest) {
     const attendanceData = await request.json()
     const {
       studentId,
+      studentName,
       classId,
+      className,
       date,
       status,
+      checkInTime,
       notes,
+      reason,
     } = attendanceData
 
     // Validate required fields
-    if (!studentId || !classId || !date || !status) {
+    if (!studentId || !studentName || !classId || !className || !date || !status) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -206,7 +214,9 @@ export async function POST(request: NextRequest) {
         },
         data: {
           status,
+          checkInTime,
           notes,
+          reason,
         },
         include: {
           student: {
@@ -215,14 +225,16 @@ export async function POST(request: NextRequest) {
               name: true,
               nisn: true,
               gender: true,
-
+              className: true,
             },
           },
           class: {
             select: {
               id: true,
               name: true,
-
+              grade: true,
+              section: true,
+              teacherName: true,
             },
           },
         },
@@ -238,10 +250,14 @@ export async function POST(request: NextRequest) {
       const newRecord = await prisma.attendanceRecord.create({
         data: {
           studentId,
+          studentName,
           classId,
+          className,
           date,
           status,
+          checkInTime,
           notes,
+          reason,
         },
         include: {
           student: {
@@ -250,14 +266,16 @@ export async function POST(request: NextRequest) {
               name: true,
               nisn: true,
               gender: true,
-
+              className: true,
             },
           },
           class: {
             select: {
               id: true,
               name: true,
-
+              grade: true,
+              section: true,
+              teacherName: true,
             },
           },
         },

@@ -47,9 +47,10 @@ async function setupCleanDatabase() {
 
     // Create new enum types
     console.log('🏗️ Creating enum types...');
-    await prisma.$executeRaw`CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'TEACHER')`;
-    await prisma.$executeRaw`CREATE TYPE "Gender" AS ENUM ('MALE', 'FEMALE')`;
+    await prisma.$executeRaw`CREATE TYPE "UserRole" AS ENUM ('TEACHER', 'ADMIN')`;
+    await prisma.$executeRaw`CREATE TYPE "Gender" AS ENUM ('L', 'P')`;
     await prisma.$executeRaw`CREATE TYPE "AttendanceStatus" AS ENUM ('PRESENT', 'ABSENT', 'LATE', 'SICK', 'PERMISSION')`;
+    await prisma.$executeRaw`CREATE TYPE "EnrollmentStatus" AS ENUM ('ACTIVE', 'INACTIVE')`;
     console.log('✅ Enum types created');
 
     // Create users table
@@ -58,13 +59,20 @@ async function setupCleanDatabase() {
       CREATE TABLE "users" (
         "id" TEXT NOT NULL,
         "name" TEXT NOT NULL,
+        "nip" TEXT NOT NULL,
         "username" TEXT NOT NULL,
         "password" TEXT NOT NULL,
         "role" "UserRole" NOT NULL,
+        "phone" TEXT,
+        "email" TEXT,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "classId" TEXT,
+        "className" TEXT,
+        "subject" TEXT,
+        "position" TEXT,
         CONSTRAINT "users_pkey" PRIMARY KEY ("id"),
+        CONSTRAINT "users_nip_key" UNIQUE ("nip"),
         CONSTRAINT "users_username_key" UNIQUE ("username"),
         CONSTRAINT "users_classId_key" UNIQUE ("classId")
       )
@@ -77,11 +85,16 @@ async function setupCleanDatabase() {
       CREATE TABLE "classes" (
         "id" TEXT NOT NULL,
         "name" TEXT NOT NULL,
+        "grade" INTEGER NOT NULL,
+        "section" TEXT NOT NULL,
+        "teacherId" TEXT NOT NULL,
+        "teacherName" TEXT NOT NULL,
         "studentCount" INTEGER NOT NULL DEFAULT 0,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT "classes_pkey" PRIMARY KEY ("id"),
-        CONSTRAINT "classes_name_key" UNIQUE ("name")
+        CONSTRAINT "classes_name_key" UNIQUE ("name"),
+        CONSTRAINT "classes_teacherId_key" UNIQUE ("teacherId")
       )
     `;
     console.log('✅ Classes table created');
@@ -93,12 +106,17 @@ async function setupCleanDatabase() {
         "id" TEXT NOT NULL,
         "name" TEXT NOT NULL,
         "classId" TEXT NOT NULL,
+        "className" TEXT NOT NULL,
         "nisn" TEXT NOT NULL,
         "gender" "Gender" NOT NULL,
         "birthDate" TEXT NOT NULL,
-        "address" TEXT,
-        "parentName" TEXT,
-        "parentPhone" TEXT,
+        "address" TEXT NOT NULL,
+        "parentName" TEXT NOT NULL,
+        "parentPhone" TEXT NOT NULL,
+        "enrollmentStatus" "EnrollmentStatus" NOT NULL DEFAULT 'ACTIVE',
+        "status" "AttendanceStatus" NOT NULL DEFAULT 'PRESENT',
+        "checkInTime" TEXT,
+        "notes" TEXT,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT "students_pkey" PRIMARY KEY ("id"),
@@ -113,10 +131,14 @@ async function setupCleanDatabase() {
       CREATE TABLE "attendance_records" (
         "id" TEXT NOT NULL,
         "studentId" TEXT NOT NULL,
+        "studentName" TEXT NOT NULL,
         "classId" TEXT NOT NULL,
+        "className" TEXT NOT NULL,
         "date" TEXT NOT NULL,
         "status" "AttendanceStatus" NOT NULL,
+        "checkInTime" TEXT,
         "notes" TEXT,
+        "reason" TEXT,
         "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT "attendance_records_pkey" PRIMARY KEY ("id"),
@@ -139,8 +161,8 @@ async function setupCleanDatabase() {
     const adminId = 'admin-' + Date.now();
     
     await prisma.$executeRaw`
-      INSERT INTO "users" ("id", "name", "username", "password", "role", "createdAt", "updatedAt")
-      VALUES (${adminId}, 'Administrator', 'admin', ${hashedPassword}, 'ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      INSERT INTO "users" ("id", "name", "nip", "username", "password", "role", "createdAt", "updatedAt")
+      VALUES (${adminId}, 'Administrator', '123456789', 'admin', ${hashedPassword}, 'ADMIN', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `;
     console.log('✅ Admin user created (admin/admin123)');
 
@@ -149,8 +171,8 @@ async function setupCleanDatabase() {
     const classId = 'class-' + Date.now();
     
     await prisma.$executeRaw`
-      INSERT INTO "classes" ("id", "name", "studentCount", "createdAt", "updatedAt")
-      VALUES (${classId}, 'Kelas 1A', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      INSERT INTO "classes" ("id", "name", "grade", "section", "teacherId", "teacherName", "studentCount", "createdAt", "updatedAt")
+      VALUES (${classId}, 'Kelas 1A', 1, 'A', ${adminId}, 'Administrator', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `;
     console.log('✅ Sample class created (Kelas 1A)');
 
