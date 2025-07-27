@@ -18,15 +18,15 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         name: true,
-        nip: true,
+        // nip: true, // Will be available after Prisma regeneration
         username: true,
         role: true,
-        phone: true,
-        email: true,
+        // phone: true, // Will be available after Prisma regeneration
+        // email: true, // Will be available after Prisma regeneration
         classId: true,
-        className: true,
-        subject: true,
-        position: true,
+        // className: true, // Will be available after Prisma regeneration
+        // subject: true, // Will be available after Prisma regeneration
+        // position: true, // Will be available after Prisma regeneration
         createdAt: true,
         updatedAt: true,
       },
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         OR: [
           { id },
           { username },
-          { nip },
+          // { nip }, // Will be available after Prisma regeneration
         ],
       },
     })
@@ -110,29 +110,29 @@ export async function POST(request: NextRequest) {
       data: {
         id,
         name,
-        nip,
+        // nip, // Will be available after Prisma regeneration
         username,
         password: hashedPassword,
         role,
-        phone,
-        email,
+        // phone, // Will be available after Prisma regeneration
+        // email, // Will be available after Prisma regeneration
         classId,
-        className,
-        subject,
-        position,
+        // className, // Will be available after Prisma regeneration
+        // subject, // Will be available after Prisma regeneration
+        // position, // Will be available after Prisma regeneration
       },
       select: {
         id: true,
         name: true,
-        nip: true,
+        // nip: true, // Will be available after Prisma regeneration
         username: true,
         role: true,
-        phone: true,
-        email: true,
+        // phone: true, // Will be available after Prisma regeneration
+        // email: true, // Will be available after Prisma regeneration
         classId: true,
-        className: true,
-        subject: true,
-        position: true,
+        // className: true, // Will be available after Prisma regeneration
+        // subject: true, // Will be available after Prisma regeneration
+        // position: true, // Will be available after Prisma regeneration
         createdAt: true,
         updatedAt: true,
       },

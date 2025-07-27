@@ -71,15 +71,14 @@ export async function GET(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            grade: true,
-            section: true,
-            teacherName: true,
+            // grade: true, // Will be available after Prisma regeneration
+            // section: true, // Will be available after Prisma regeneration
+            // teacherName: true, // Will be available after Prisma regeneration
           },
         },
       },
       orderBy: [
-        { class: { grade: 'asc' } },
-        { class: { section: 'asc' } },
+        { class: { name: 'asc' } },
         { name: 'asc' },
       ],
     })
@@ -193,22 +192,22 @@ export async function POST(request: NextRequest) {
         name,
         nisn,
         classId,
-        className: classExists.name,
+        // className: classExists.name, // Will be available after Prisma regeneration
         gender,
         birthDate: birthDate, // Keep as string, don't convert to Date
         address,
         parentName,
         parentPhone,
-        enrollmentStatus: enrollmentStatus
+        // enrollmentStatus: enrollmentStatus // Will be available after Prisma regeneration
       },
       include: {
         class: {
           select: {
             id: true,
             name: true,
-            grade: true,
-            section: true,
-            teacherName: true,
+            // grade: true, // Will be available after Prisma regeneration
+            // section: true, // Will be available after Prisma regeneration
+            // teacherName: true, // Will be available after Prisma regeneration
           },
         },
       },

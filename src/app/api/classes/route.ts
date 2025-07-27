@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               name: true,
-              nip: true,
+              // nip: true, // Will be available after Prisma regeneration
               username: true,
-              phone: true,
-              email: true,
+              // phone: true, // Will be available after Prisma regeneration
+              // email: true, // Will be available after Prisma regeneration
             },
           },
           _count: {
@@ -30,8 +30,7 @@ export async function GET(request: NextRequest) {
           },
         },
         orderBy: [
-          { grade: 'asc' },
-          { section: 'asc' },
+          { name: 'asc' },
         ],
       })
     } else if (userRole === 'TEACHER' && userClassId) {
@@ -45,10 +44,10 @@ export async function GET(request: NextRequest) {
             select: {
               id: true,
               name: true,
-              nip: true,
+              // nip: true, // Will be available after Prisma regeneration
               username: true,
-              phone: true,
-              email: true,
+              // phone: true, // Will be available after Prisma regeneration
+              // email: true, // Will be available after Prisma regeneration
             },
           },
           _count: {
@@ -121,7 +120,7 @@ export async function POST(request: NextRequest) {
         OR: [
           { id },
           { name },
-          { teacherId },
+          // { teacherId }, // Will be available after Prisma regeneration
         ],
       },
     })
@@ -138,10 +137,10 @@ export async function POST(request: NextRequest) {
       data: {
         id,
         name,
-        grade,
-        section,
-        teacherId,
-        teacherName,
+        // grade, // Will be available after Prisma regeneration
+        // section, // Will be available after Prisma regeneration
+        // teacherId, // Will be available after Prisma regeneration
+        // teacherName, // Will be available after Prisma regeneration
         studentCount: 0,
       },
       include: {
@@ -149,10 +148,10 @@ export async function POST(request: NextRequest) {
           select: {
             id: true,
             name: true,
-            nip: true,
+            // nip: true, // Will be available after Prisma regeneration
             username: true,
-            phone: true,
-            email: true,
+            // phone: true, // Will be available after Prisma regeneration
+            // email: true, // Will be available after Prisma regeneration
           },
         },
       },

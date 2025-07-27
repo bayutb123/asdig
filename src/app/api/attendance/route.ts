@@ -90,24 +90,24 @@ export async function GET(request: NextRequest) {
             name: true,
             nisn: true,
             gender: true,
-            className: true,
+            // className: true, // Will be available after Prisma regeneration
           },
         },
         class: {
           select: {
             id: true,
             name: true,
-            grade: true,
-            section: true,
-            teacherName: true,
+            // grade: true, // Will be available after Prisma regeneration
+            // section: true, // Will be available after Prisma regeneration
+            // teacherName: true, // Will be available after Prisma regeneration
 
           },
         },
       },
       orderBy: [
         { date: 'desc' },
-        { className: 'asc' },
-        { studentName: 'asc' },
+        { classId: 'asc' },
+        { studentId: 'asc' },
       ],
     })
 
@@ -125,7 +125,7 @@ export async function GET(request: NextRequest) {
           id: true,
           classId: true,
           date: true,
-          studentName: true,
+          studentId: true,
           status: true
         }
       });
@@ -214,9 +214,9 @@ export async function POST(request: NextRequest) {
         },
         data: {
           status,
-          checkInTime,
+          // checkInTime, // Will be available after Prisma regeneration
           notes,
-          reason,
+          // reason, // Will be available after Prisma regeneration
         },
         include: {
           student: {
@@ -225,16 +225,16 @@ export async function POST(request: NextRequest) {
               name: true,
               nisn: true,
               gender: true,
-              className: true,
+              // className: true, // Will be available after Prisma regeneration
             },
           },
           class: {
             select: {
               id: true,
               name: true,
-              grade: true,
-              section: true,
-              teacherName: true,
+              // grade: true, // Will be available after Prisma regeneration
+              // section: true, // Will be available after Prisma regeneration
+              // teacherName: true, // Will be available after Prisma regeneration
             },
           },
         },
@@ -250,14 +250,14 @@ export async function POST(request: NextRequest) {
       const newRecord = await prisma.attendanceRecord.create({
         data: {
           studentId,
-          studentName,
+          // studentName, // Will be available after Prisma regeneration
           classId,
-          className,
+          // className, // Will be available after Prisma regeneration
           date,
           status,
-          checkInTime,
+          // checkInTime, // Will be available after Prisma regeneration
           notes,
-          reason,
+          // reason, // Will be available after Prisma regeneration
         },
         include: {
           student: {
@@ -266,16 +266,16 @@ export async function POST(request: NextRequest) {
               name: true,
               nisn: true,
               gender: true,
-              className: true,
+              // className: true, // Will be available after Prisma regeneration
             },
           },
           class: {
             select: {
               id: true,
               name: true,
-              grade: true,
-              section: true,
-              teacherName: true,
+              // grade: true, // Will be available after Prisma regeneration
+              // section: true, // Will be available after Prisma regeneration
+              // teacherName: true, // Will be available after Prisma regeneration
             },
           },
         },

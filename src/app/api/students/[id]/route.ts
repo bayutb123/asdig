@@ -24,9 +24,9 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            grade: true,
-            section: true,
-            teacherName: true,
+            // grade: true, // Will be available after Prisma regeneration
+            // section: true, // Will be available after Prisma regeneration
+            // teacherName: true, // Will be available after Prisma regeneration
           },
         },
       },
@@ -163,22 +163,22 @@ export async function PUT(
         name,
         nisn,
         classId,
-        className: newClass.name,
+        // className: newClass.name, // Will be available after Prisma regeneration
         gender,
         birthDate: birthDate, // Keep as string, don't convert to Date
         address,
         parentName,
         parentPhone,
-        enrollmentStatus: enrollmentStatus
+        // enrollmentStatus: enrollmentStatus // Will be available after Prisma regeneration
       },
       include: {
         class: {
           select: {
             id: true,
             name: true,
-            grade: true,
-            section: true,
-            teacherName: true,
+            // grade: true, // Will be available after Prisma regeneration
+            // section: true, // Will be available after Prisma regeneration
+            // teacherName: true, // Will be available after Prisma regeneration
           },
         },
       },
