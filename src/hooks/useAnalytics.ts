@@ -24,15 +24,15 @@ import {
  * Automatically tracks page views and provides tracking functions
  */
 export const useAnalytics = () => {
-  const { user, admin, teacher } = useAuth();
+  const { user, hasAdminAccess, hasTeacherAccess } = useAuth();
   const pathname = usePathname();
 
   // Determine user role for analytics
   const getUserRole = useCallback((): UserRole => {
-    if (admin) return 'admin';
-    if (teacher) return 'teacher';
+    if (hasAdminAccess) return 'admin';
+    if (hasTeacherAccess) return 'teacher';
     return 'guest';
-  }, [admin, teacher]);
+  }, [hasAdminAccess, hasTeacherAccess]);
 
   // Track page views automatically
   useEffect(() => {
